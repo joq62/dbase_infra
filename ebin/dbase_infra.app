@@ -8,5 +8,6 @@
 {registered,[dbase_infra]},
 {applications, [kernel,stdlib]},
 {mod, {dbase_infra_app,[]}},
-{start_phases, []}
+{start_phases, []},
+{git_path,"https://github.com/joq62/dbase_infra.git"}
 ]}.
