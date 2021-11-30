@@ -270,38 +270,17 @@ setup()->
     mnesia:delete_schema([node()]),
     mnesia:start(), 
     %%-- init_host
-    db_host:create_table(),
-    
-     [db_host:create(HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status)||
-	{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-host_info()],
+    create_from_file(db_host,?ConfigDir),
+ %   [db_host:create(HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status)||
+%	{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-db_host:data_from_file(?ConfigDir)],
+  
     ok.
 
-host_info()->
-    {ok,Files}=file:list_dir(?ConfigDir),
-    HostFiles=[File||File<-Files,
-		     ?Extension=:=filename:extension(File)],
-    HostFileNames=[filename:join(?ConfigDir,File)||File<-HostFiles],
-    AccessInfo=create_list(HostFileNames),
-    AccessInfo.
+create_from_file(Module,Dir)->
+    Module:create_table(),
+    [Module:create(Data)||Data<-Module:data_from_file(Dir)].  
 
-create_list(HostFileNames)->
-    create_list(HostFileNames,[]).
-create_list([],List)->
-   % io:format("List ~p~n",[List]),
-    List;
-create_list([HostFile|T],Acc)->
-    {ok,I}=file:consult(HostFile),
-    HostName=proplists:get_value(hostname,I),
-    StartArgs=proplists:get_value(start_args,I),
-    AccessInfo=proplists:get_value(access_info,I),
-    Type=proplists:get_value(host_type,I),
-    DirsToKeep=proplists:get_value(dirs_to_keep,I),
-    AppDir=proplists:get_value(application_dir,I),
-    Status=stopped,
-   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}|Acc],
-    
-    create_list(T,NewAcc).
+
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc

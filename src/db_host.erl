@@ -25,7 +25,9 @@ access_info()->
 access_info(Hostname)->   
     Record=read_record(Hostname),
     Record#?RECORD.access_info.
-
+hosts()->
+    AllRecords=read_all_record(),
+    [X#?RECORD.hostname||X<-AllRecords].
 start_args(Hostname)->
     Record=read_record(Hostname),
     Record#?RECORD.start_args.
@@ -82,7 +84,7 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create(HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status) ->
+create({HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
@@ -207,4 +209,32 @@ do(Q) ->
 		   Error
 	   end,
     Result.
+
+%%--------------------------------------------------------------------
+-define(Extension,".host").
+data_from_file(Dir)->
+    {ok,Files}=file:list_dir(Dir),
+    HostFiles=[File||File<-Files,
+		     ?Extension=:=filename:extension(File)],
+    HostFileNames=[filename:join(Dir,File)||File<-HostFiles],
+    data(HostFileNames).
+    
+
+data(HostFileNames)->
+    data(HostFileNames,[]).
+data([],List)->
+   % io:format("List ~p~n",[List]),
+    List;
+data([HostFile|T],Acc)->
+    {ok,I}=file:consult(HostFile),
+    HostName=proplists:get_value(hostname,I),
+    StartArgs=proplists:get_value(start_args,I),
+    AccessInfo=proplists:get_value(access_info,I),
+    Type=proplists:get_value(host_type,I),
+    DirsToKeep=proplists:get_value(dirs_to_keep,I),
+    AppDir=proplists:get_value(application_dir,I),
+    Status=stopped,
+   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
+    NewAcc=[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}|Acc],
+    data(T,NewAcc).
 

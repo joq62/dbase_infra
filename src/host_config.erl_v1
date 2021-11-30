@@ -10,7 +10,6 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--define(ConfigDir,"host_configuration").
 -define(Extension,".host").
 
 %% --------------------------------------------------------------------
@@ -18,10 +17,10 @@
 
 %% External exports
 -export([
-	 access_info/0,
+	 access/1,
 	 access_info/1,
 	 host/0,
-	 start_args/1,
+	 start_args/2,
 	 ip/1,
 	 ssh_port/1,
 	 uid/1,
@@ -93,8 +92,8 @@ node(HostName)->
 %% Description: List of test cases 
 %% Returns: non
 %% --------------------------------------------------------------------
-start_args(HostName)->
-  AllHostInfo=access_info(),
+start_args(HostName,Dir)->
+  AllHostInfo=access(Dir),
     R=[proplists:get_value(start_args,Info)||Info<-AllHostInfo,
 					     HostName=:=proplists:get_value(hostname,Info)],
     case R of
@@ -122,11 +121,11 @@ host()->
 %% Description: List of test cases 
 %% Returns: non
 %% --------------------------------------------------------------------
-access_info()->
-    {ok,Files}=file:list_dir(?ConfigDir),
+access(Dir)->
+    {ok,Files}=file:list_dir(Dir),
     HostFiles=[File||File<-Files,
 		     ?Extension=:=filename:extension(File)],
-    HostFileNames=[filename:join(?ConfigDir,File)||File<-HostFiles],
+    HostFileNames=[filename:join(Dir,File)||File<-HostFiles],
     AccessInfo=create_list(HostFileNames),
     AccessInfo.
 access_info(HostName)->
