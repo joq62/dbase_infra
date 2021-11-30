@@ -21,9 +21,6 @@ unit_test:
 #	common
 #	cp ../common/src/*.app ebin;
 	erlc -o ebin ../../common/src/*.erl;
-#	bully
-	cp ../bully_election/src/*.app ebin;
-	erlc -o ebin ../bully_election/src/*.erl;
 #	app
 	cp src/*.app ebin;
 	erlc -o ebin src/*.erl;

@@ -1,0 +1,34 @@
+%%
+%% Host Information 
+%
+%%------------------------ applications to init start ----------------------
+{hostname,"c201"}.
+%% -----------------------host access information  --------------------------------
+{access_info,[{hostname,"c201"},
+              {ip,"192.168.0.201"},
+	      {ssh_port,22},
+	      {uid,"joq62"},
+	      {pwd,"festum01"},
+	      {node,'host@c201'}
+	     ]
+}.
+	      
+%% -----------------------host_Type --------------------------------
+{host_type,type,auto_erl_controller}.
+
+%% ---------------------- erlang start info -----------------------
+{start_args,[{erl_cmd,"/lib/erlang/bin/erl -detached"},
+             {cookie,"cookie"},
+	     {env_vars,[{kublet,[{mode,controller}]},
+			{dbase_infra,[{nodes,['host@200','host@202']}]},
+			{bully,[{nodes,['host@200','host@202']}]}]},
+	     {nodename,"host"}
+	    ]
+}.
+
+%% -----------------------Dirs to keep --------------------------------
+{dirs_to_keep,["logs"]}.
+
+%%----------------------- service dir ---------------------------------
+{application_dir,"applications"}.
+
