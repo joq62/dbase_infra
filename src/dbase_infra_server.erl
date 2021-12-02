@@ -56,23 +56,7 @@ schedule()->
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
 init([]) ->
-    case bully:am_i_leader(node()) of
-	false->
-	    mnesia:stop(),
-	    mnesia:del_table_copy(schema,node()),
-	    mnesia:delete_schema([node()]),
-	    mnesia:start();
-	true->
-	    {ok,WantedNodes}=application:get_env(dbase_infra,nodes),
-	    RunningNodes=[Node||Node<-WantedNodes,
-				pong=:=net_adm:ping(Node)],
-	    DbaseNodes=[Node||Node<-RunningNodes,
-			      yes=:=rpc:call(Node,mnesia,system_info,[is_running],1000)],
-						%  io:format("node(),DbaseNodes ~p~n",[{node(),DbaseNodes,?FUNCTION_NAME,?MODULE,?LINE}]),
-	    ok=dbase:dynamic_db_init(DbaseNodes),
-	    ok
-    end,
-    
+    dbase:dynamic_db_init([]),
     {ok, #state{}}.
 
 %% --------------------------------------------------------------------
@@ -85,8 +69,10 @@ init([]) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
-handle_call({allocate,App},_From, State) ->
-    Reply=loader:allocate(App),
+handle_call({load_from_file,Module,Dir},_From, State) ->
+    ok=rpc:call(node(),Module,create_table,[],5*1000),
+    AllData=rpc:call(node(),Module,data_from_file,[Dir],5*1000),
+    Reply=[rpc:call(node(),Module,create,[Data],5*1000)||Data<-AllData],
     {reply, Reply, State};
 
 
@@ -95,6 +81,9 @@ handle_call({loaded},_From, State) ->
     {reply, Reply, State};
 
 handle_call({stop}, _From, State) ->
+    mnesia:stop(),
+    mnesia:del_table_copy(schema,node()),
+    mnesia:delete_schema([node()]),
     {stop, normal, shutdown_ok, State};
 
 handle_call(Request, From, State) ->

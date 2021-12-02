@@ -3,7 +3,6 @@
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
--define(LockTimeOut, 5). %% 30 sec 
 
 -define(TABLE,deployment).
 -define(RECORD,deployment).

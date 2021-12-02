@@ -11,7 +11,7 @@
 %% Behavioural exports
 %% --------------------------------------------------------------------
 -export([
-	 loaded/0,
+	 load_from_file/2,
 	 boot/0
 	]).
 
@@ -58,8 +58,8 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 
 
 
-loaded()->
-    gen_server:call(?SERVER, {loaded},infinity).
+load_from_file(Module,Dir)->
+    gen_server:call(?SERVER, {load_from_file,Module,Dir},infinity).
 
 
 %% ====================================================================

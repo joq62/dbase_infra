@@ -3,13 +3,12 @@
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
--define(LockTimeOut, 5). %% 30 sec 
 
 -define(TABLE,host).
 -define(RECORD,host). 
 -record(host,
 	{
-	 hostname,
+	 id,
 	 access_info,
 	 type,
 	 start_args,
@@ -21,59 +20,61 @@
 %%------------------------- Application specific commands ----------------
 access_info()->   
     AllRecords=read_all_record(),
-    [{X#?RECORD.hostname,X#?RECORD.access_info}||X<-AllRecords].
-access_info(Hostname)->   
-    Record=read_record(Hostname),
+    [{X#?RECORD.id,X#?RECORD.access_info}||X<-AllRecords].
+access_info(Id)->   
+    Record=read_record(Id),
     Record#?RECORD.access_info.
 hosts()->
     AllRecords=read_all_record(),
-    [X#?RECORD.hostname||X<-AllRecords].
-start_args(Hostname)->
-    Record=read_record(Hostname),
+    [Host||{Host,_}<-[X#?RECORD.id||X<-AllRecords]].
+
+
+start_args(Id)->
+    Record=read_record(Id),
     Record#?RECORD.start_args.
 
-type(Hostname)->
-    Record=read_record(Hostname),
+type(Id)->
+    Record=read_record(Id),
     Record#?RECORD.type.
 
-dirs_to_keep(Hostname)->
-    Record=read_record(Hostname),
+dirs_to_keep(Id)->
+    Record=read_record(Id),
     Record#?RECORD.dirs_to_keep.
 
-application_dir(Hostname)->
-    Record=read_record(Hostname),
+application_dir(Id)->
+    Record=read_record(Id),
     Record#?RECORD.application_dir.
-status(Hostname)->
-    Record=read_record(Hostname),
+status(Id)->
+    Record=read_record(Id),
     Record#?RECORD.status.
 
-ip(Hostname)->
-    I=access_info(Hostname),
+ip(Id)->
+    I=access_info(Id),
     proplists:get_value(ip,I).
-port(Hostname)->
-    I=access_info(Hostname),
+port(Id)->
+    I=access_info(Id),
     proplists:get_value(ssh_port,I).
-uid(Hostname)->
-    I=access_info(Hostname),
+uid(Id)->
+    I=access_info(Id),
     proplists:get_value(uid,I).
-passwd(Hostname)->
-    I=access_info(Hostname),
+passwd(Id)->
+    I=access_info(Id),
     proplists:get_value(pwd,I).
-node(Hostname)->
-    I=access_info(Hostname),
+node(Id)->
+    I=access_info(Id),
     proplists:get_value(node,I).
 
-erl_cmd(Hostname)->
-    I=start_args(Hostname),
+erl_cmd(Id)->
+    I=start_args(Id),
     proplists:get_value(erl_cmd,I).
-env_vars(Hostname)->
-    I=start_args(Hostname),
+env_vars(Id)->
+    I=start_args(Id),
     proplists:get_value(env_vars,I).
-cookie(Hostname)->
-    I=start_args(Hostname),
+cookie(Id)->
+    I=start_args(Id),
     proplists:get_value(cookie,I).
-nodename(Hostname)->
-    I=start_args(Hostname),
+nodename(Id)->
+    I=start_args(Id),
     proplists:get_value(nodename,I).
 
     
@@ -84,11 +85,11 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
+create({Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
-				hostname=HostName,
+				id=Id,
 				access_info=AccessInfo,
 				type=Type,
 				start_args=StartArgs,
@@ -142,14 +143,14 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
-		       {?RECORD,HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z]
+		   [{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
+		       {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z]
 	   end,
     Result.
 
 read_record(Object) ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE),
-		   X#?RECORD.hostname==Object])),
+		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
 		   {aborted,Reason};
@@ -160,13 +161,13 @@ read_record(Object) ->
 
 read(Object) ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE),
-		   X#?RECORD.hostname==Object])),
+		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
-			   {?RECORD,HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z],
+		   [R]=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
+			   {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -174,7 +175,7 @@ read(Object) ->
 delete(Object) ->
     F = fun() -> 
 		RecordList=[X||X<-mnesia:read({?TABLE,Object}),
-			    X#?RECORD.hostname==Object],
+			    X#?RECORD.id==Object],
 		case RecordList of
 		    []->
 			mnesia:abort(?TABLE);
@@ -186,7 +187,7 @@ delete(Object) ->
 update_status(Object,NewStatus)->
  F = fun() -> 
 	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
-				       X#?RECORD.hostname==Object])),
+				       X#?RECORD.id==Object])),
 	     case RecordList of
 		 []->
 		     mnesia:abort(?TABLE);
@@ -227,7 +228,7 @@ data([],List)->
     List;
 data([HostFile|T],Acc)->
     {ok,I}=file:consult(HostFile),
-    HostName=proplists:get_value(hostname,I),
+    Id=proplists:get_value(id,I),
     StartArgs=proplists:get_value(start_args,I),
     AccessInfo=proplists:get_value(access_info,I),
     Type=proplists:get_value(host_type,I),
@@ -235,6 +236,6 @@ data([HostFile|T],Acc)->
     AppDir=proplists:get_value(application_dir,I),
     Status=stopped,
    % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}|Acc],
+    NewAcc=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}|Acc],
     data(T,NewAcc).
 

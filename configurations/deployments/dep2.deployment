@@ -1,0 +1,5 @@
+%%
+%% Information about a specific deployment
+%
+%%------------------------ applications  ----------------------
+{dep2 ,[{myadd,"1.0.0",1,["C201"]}]}.

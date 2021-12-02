@@ -4,7 +4,7 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(host_test).   
+-module(dbase_test).   
    
 %% --------------------------------------------------------------------
 %% Include files
@@ -31,22 +31,25 @@ start()->
     ok=setup(),
   %  io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-%    io:format("~p~n",[{"Start all_info()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=all_info(),
-    io:format("~p~n",[{"Stop all_info()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    io:format("~p~n",[{"Start initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=initial(),
+    io:format("~p~n",[{"Stop initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
- %   io:format("~p~n",[{"Start access()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=access(),
-    io:format("~p~n",[{"Stop access()",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   io:format("~p~n",[{"Start add_node()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=add_node(),
+    io:format("~p~n",[{"Stop add_node()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
- 
+ %   io:format("~p~n",[{"Start node_status()",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   ok=node_status(),
+ %   io:format("~p~n",[{"Stop node_status()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
 %   io:format("~p~n",[{"Start start_args()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=start_args(),
-    io:format("~p~n",[{"Stop start_args()",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   ok=start_args(),
+ %   io:format("~p~n",[{"Stop start_args()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
 %   io:format("~p~n",[{"Start detailed()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=detailed(),
-    io:format("~p~n",[{"Stop detailed()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    ok=detailed(),
+%    io:format("~p~n",[{"Stop detailed()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
 %   io:format("~p~n",[{"Start start_stop()",?MODULE,?FUNCTION_NAME,?LINE}]),
  %   ok=start_stop(),
@@ -63,53 +66,6 @@ start()->
     io:format("------>"++atom_to_list(?MODULE)++" ENDED SUCCESSFUL ---------"),
     ok.
 
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% -------------------------------------------------------------------
-all_info()->
-    % init 
-    AllInfo=access_info_all(),
-    AllInfo=lists:keysort(1,db_host:read_all()),
-    [{hostname,"c100"},
-     {ip,"192.168.0.100"},
-     {ssh_port,22},
-     {uid,"joq62"},
-     {pwd,"festum01"},
-     {node,host0@c100}]=db_host:access_info({"c100","host0"}),
-    
-    auto_erl_controller=db_host:type({"c100","host0"}),
-    [{erl_cmd,"/lib/erlang/bin/erl -detached"},
-     {cookie,"cookie"},
-     {env_vars,
-      [{kublet,[{mode,controller}]},
-       {dbase_infra,
-	[{nodes,[host0@c100,host2@c100]}]},
-       {bully,[{nodes,[host0@c100,host2@c100]}]}]},
-     {nodename,"host1"}]=db_host:start_args({"c100","host1"}),
-    ["logs"]=db_host:dirs_to_keep({"c100","host0"}),
-    "applications"=db_host:application_dir({"c100","host2"}),
-    stopped=db_host:status({"c100","host0"}),
-   
-    ok. 
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% -------------------------------------------------------------------
-access()->
-    [{hostname,"c100"},
-     {ip,"192.168.0.100"},
-     {ssh_port,22},
-     {uid,"joq62"},
-     {pwd,"festum01"},
-     {node,host2@c100}]=db_host:access_info({"c100","host2"}),
-   
-    
-
-    
-    ok.
 
 
 %% --------------------------------------------------------------------
@@ -117,77 +73,109 @@ access()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% -------------------------------------------------------------------
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% -------------------------------------------------------------------
-
-
-detailed()->
-    
-    "192.168.0.100"=db_host:ip({"c100","host2"}),
-    22=db_host:port({"c100","host2"}),
-    "joq62"=db_host:uid({"c100","host2"}),
-    "festum01"=db_host:passwd({"c100","host2"}),
-    host2@c100=db_host:node({"c100","host2"}),
-    
-    "/lib/erlang/bin/erl -detached"=db_host:erl_cmd({"c100","host2"}),
-    [{kublet,[{mode,controller}]},
-     {dbase_infra,[{nodes,[host0@c100,host1@c100]}]},
-     {bully,[{nodes,[host0@c100,host1@c100]}]}]=db_host:env_vars({"c100","host2"}),
-    "host2"=db_host:nodename({"c100","host2"}),
-    "cookie"=db_host:cookie({"c100","host2"}),
-
-    stopped=db_host:status({"c100","host2"}),
-    {atomic,ok}=db_host:update_status({"c100","host2"},started),
-    started=db_host:status({"c100","host2"}),
-    ok.
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% -------------------------------------------------------------------
-start_args()->
-  [{erl_cmd,"/lib/erlang/bin/erl -detached"},
-   {cookie,"cookie"},
-   {env_vars,
-    [{kublet,[{mode,controller}]},
-     {dbase_infra,
-      [{nodes,[host0@c100,host1@c100]}]},
-     {bully,[{nodes,[host0@c100,host1@c100]}]}]},
-   {nodename,"host2"}]=db_host:start_args({"c100","host2"}),
-
-    ok.
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
 -define(ConfigDir,"test_configurations/host_configuration").
--define(Extension,".host").
 
-setup()->
-    %%--- Mnesia start
-    application:start(dbase_infra),
-    dbase_infra:load_from_file(db_host,?ConfigDir),
+initial()->
+    [ok,ok,ok]=[rpc:call(Node,application,start,[dbase_infra],5*1000)||Node<-get_nodes()],
+    [io:format("~p~n",[{Node,rpc:call(Node,mnesia,system_info,[],2*1000)}])||Node<-get_nodes()],
+    %%----- load initial node
+    [Node0|_]=get_nodes(),
+    [{atomic,ok},{atomic,ok},{atomic,ok}]=rpc:call(Node0,dbase_infra,load_from_file,[db_host,?ConfigDir],5*1000),
+    
+    [{host0@c100,host1@c100},
+     {host1@c100,{badrpc,_}},
+     {host2@c100,{badrpc,_}}]=[{Node,rpc:call(Node,db_host,node,[{"c100","host1"}],5*1000)}||Node<-get_nodes()],
+    
+    ok.
+    
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+add_node()->
+    
+
     ok.
 
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+x()->    
+    [[{atomic,ok},{atomic,ok},{atomic,ok}],
+     [{atomic,ok},{atomic,ok},{atomic,ok}],
+     [{atomic,ok},{atomic,ok},{atomic,ok}]].
+
+
+
+
+
+    
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+
+    
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+get_nodes()->
+    HostId=net_adm:localhost(),
+    A="host0@"++HostId,
+    Node0=list_to_atom(A),
+    B="host1@"++HostId,
+    Node1=list_to_atom(B),
+    C="host2@"++HostId,
+    Node2=list_to_atom(C),    
+    Nodes=[Node0,Node1,Node2].
+    
+setup()->
+    HostId=net_adm:localhost(),
+    A="host0@"++HostId,
+    Node0=list_to_atom(A),
+    B="host1@"++HostId,
+    Node1=list_to_atom(B),
+    C="host2@"++HostId,
+    Node2=list_to_atom(C),    
+    Nodes=[Node0,Node1,Node2],
+    [rpc:call(Node,init,stop,[])||Node<-Nodes],
+    Cookie=atom_to_list(erlang:get_cookie()),
+    Args="-pa ebin -setcookie "++Cookie,
+    [{ok,Node0},
+     {ok,Node1},
+     {ok,Node2}]=[slave:start(HostId,NodeName,Args)||NodeName<-["host0","host1","host2"]],
+  
+    ok.
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -196,10 +184,7 @@ setup()->
 %% -------------------------------------------------------------------    
 
 cleanup()->
-    mnesia:stop(),
-    mnesia:del_table_copy(schema,node()),
-    mnesia:delete_schema([node()]),
-    application:stop(dbase_infra),
+  
     ok.
 %% --------------------------------------------------------------------
 %% Function:start/0 
