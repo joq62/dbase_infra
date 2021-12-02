@@ -76,6 +76,13 @@ handle_call({load_from_file,Module,Dir},_From, State) ->
     {reply, Reply, State};
 
 
+handle_call({add_dynamic,Node},_From, State) ->
+    Reply=rpc:call(Node,dbase,dynamic_db_init,[[node()]],3*1000),
+    {reply, Reply, State};
+handle_call({dynamic_load_table,Node,Module},_From, State) ->
+    Reply=rpc:call(Node,dbase,dynamic_load_table,[Module],5*1000),
+    {reply, Reply, State};
+
 handle_call({loaded},_From, State) ->
     Reply=State#state.loaded,
     {reply, Reply, State};

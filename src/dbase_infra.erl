@@ -12,6 +12,8 @@
 %% --------------------------------------------------------------------
 -export([
 	 load_from_file/2,
+	 add_dynamic/1,
+	 dynamic_load_table/2,
 	 boot/0
 	]).
 
@@ -61,6 +63,10 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 load_from_file(Module,Dir)->
     gen_server:call(?SERVER, {load_from_file,Module,Dir},infinity).
 
+add_dynamic(Node)->
+    gen_server:call(?SERVER, {add_dynamic,Node},infinity).
+dynamic_load_table(Node,Module)->
+    gen_server:call(?SERVER,{dynamic_load_table,Node,Module},infinity).
 
 %% ====================================================================
 %% Internal functions

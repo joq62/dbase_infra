@@ -77,7 +77,7 @@ start()->
 
 initial()->
     [ok,ok,ok]=[rpc:call(Node,application,start,[dbase_infra],5*1000)||Node<-get_nodes()],
-    [io:format("~p~n",[{Node,rpc:call(Node,mnesia,system_info,[],2*1000)}])||Node<-get_nodes()],
+ %   [io:format("~p~n",[{Node,rpc:call(Node,mnesia,system_info,[],2*1000)}])||Node<-get_nodes()],
     %%----- load initial node
     [Node0|_]=get_nodes(),
     [{atomic,ok},{atomic,ok},{atomic,ok}]=rpc:call(Node0,dbase_infra,load_from_file,[db_host,?ConfigDir],5*1000),
@@ -94,8 +94,46 @@ initial()->
 %% Returns: non
 %% --------------------------------------------------------------------
 add_node()->
+    [Node0,Node1,Node2]=get_nodes(),
+    {badrpc,_}=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    {badrpc,_}=rpc:call(Node2,db_host,node,[{"c100","host1"}]),
     
+    ok=rpc:call(Node1,dbase_infra,add_dynamic,[Node0],3*1000),
+    timer:sleep(500),
+    ok=rpc:call(Node1,dbase,dynamic_load_table,[db_host],3*1000),
+    timer:sleep(500),
+    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    {badrpc,_}=rpc:call(Node2,db_host,node,[{"c100","host1"}]),
 
+    ok=rpc:call(Node2,dbase_infra,add_dynamic,[Node0],3*1000),
+    timer:sleep(500),
+    ok=rpc:call(Node2,dbase,dynamic_load_table,[db_host],3*1000),
+    timer:sleep(500),
+    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
+    
+    %---------- stop and restart node
+    slave:stop(Node0),
+    {badrpc,_}=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
+    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
+    %% restart node
+  
+    {ok,Node0}=start_slave("host0"),
+    {badrpc,_}=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
+    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
+
+    %% Start dbase_infra
+    ok=rpc:call(Node0,application,start,[dbase_infra],5*1000),
+   ok=rpc:call(Node0,dbase_infra,add_dynamic,[Node1],3*1000),
+    timer:sleep(500),
+    ok=rpc:call(Node0,dbase,dynamic_load_table,[db_host],3*1000),
+    timer:sleep(500),
+
+    host1@c100=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
+    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
+    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
     ok.
 
 %% --------------------------------------------------------------------
@@ -157,8 +195,16 @@ get_nodes()->
     Node1=list_to_atom(B),
     C="host2@"++HostId,
     Node2=list_to_atom(C),    
-    Nodes=[Node0,Node1,Node2].
+    [Node0,Node1,Node2].
     
+start_slave(NodeName)->
+    HostId=net_adm:localhost(),
+    Node=list_to_atom(NodeName++"@"++HostId),
+    rpc:call(Node,init,stop,[]),
+    Cookie=atom_to_list(erlang:get_cookie()),
+    Args="-pa ebin -setcookie "++Cookie,
+    slave:start(HostId,NodeName,Args).
+
 setup()->
     HostId=net_adm:localhost(),
     A="host0@"++HostId,
@@ -167,13 +213,9 @@ setup()->
     Node1=list_to_atom(B),
     C="host2@"++HostId,
     Node2=list_to_atom(C),    
-    Nodes=[Node0,Node1,Node2],
-    [rpc:call(Node,init,stop,[])||Node<-Nodes],
-    Cookie=atom_to_list(erlang:get_cookie()),
-    Args="-pa ebin -setcookie "++Cookie,
     [{ok,Node0},
      {ok,Node1},
-     {ok,Node2}]=[slave:start(HostId,NodeName,Args)||NodeName<-["host0","host1","host2"]],
+     {ok,Node2}]=[start_slave(NodeName)||NodeName<-["host0","host1","host2"]],
   
     ok.
 
