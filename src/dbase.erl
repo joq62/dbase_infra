@@ -28,6 +28,7 @@
 %% Returns: non
 %% --------------------------------------------------------------------
 dynamic_db_init([])->
+    io:format("~p~n",[{node(),?FUNCTION_NAME,?MODULE,?LINE}]),
     mnesia:stop(),
     mnesia:del_table_copy(schema,node()),
     mnesia:delete_schema([node()]),
@@ -35,6 +36,7 @@ dynamic_db_init([])->
     ok;
 
 dynamic_db_init([DbaseNode|T])->
+    io:format("DbaseNode ~p~n",[{DbaseNode,node(),?FUNCTION_NAME,?MODULE,?LINE}]),
     Added=node(),
     StorageType=ram_copies,
     case rpc:call(DbaseNode,mnesia,change_config,[extra_db_nodes, [Added]],5000) of
@@ -48,6 +50,7 @@ dynamic_db_init([DbaseNode|T])->
     end.
 
 dynamic_load_table(Module)->
+    io:format("Module ~p~n",[{Module,node(),?FUNCTION_NAME,?MODULE,?LINE}]),
     Added=node(),
     StorageType=ram_copies,
     Module:add_table(Added,StorageType),
