@@ -24,9 +24,15 @@ access_info()->
 access_info(Id)->   
     Record=read_record(Id),
     Record#?RECORD.access_info.
+
+
 hosts()->
     AllRecords=read_all_record(),
     [Host||{Host,_}<-[X#?RECORD.id||X<-AllRecords]].
+
+ids()->
+    AllRecords=read_all_record(),
+    [Id||Id<-[X#?RECORD.id||X<-AllRecords]].
 
 
 start_args(Id)->
