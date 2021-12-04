@@ -1,40 +1,31 @@
--module(db_deployment).
+-module(db_service_catalog).
 -import(lists, [foreach/2]).
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
 
--define(TABLE,deployment).
--define(RECORD,deployment). 
--record(deployment,
+-define(TABLE,service_catalog).
+-define(RECORD,service_catalog). 
+-record(service_catalog,
 	{
 	 id,
-	 name,
-	 info,
-	 status
+	 app,
+	 vsn,
+	 git_path
 	}).
 
 %%------------------------- Application specific commands ----------------
-info()->   
-    AllRecords=read_all_record(),
-    [{X#?RECORD.name,X#?RECORD.info}||X<-AllRecords].
+vsn(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.vsn.
 
-info(Id)->   
+app(Id)->
     Record=read_record(Id),
-    Record#?RECORD.info.
-    
-name(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.name.
-  
-status()->
-    AllRecords=read_all_record(),
-    [{X#?RECORD.name,X#?RECORD.status}||X<-AllRecords].   
+    Record#?RECORD.app.
 
-status(Id)->
+git_path(Id)->
     Record=read_record(Id),
-    Record#?RECORD.status.
- 
+    Record#?RECORD.git_path.
     
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
@@ -43,14 +34,14 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,Name,Info,Status}) ->
+create({Id,App,Vsn,GitPath}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
-				name=Name,
-				info=Info,
-				status=Status
+				app=App,
+				vsn=Vsn,
+				git_path=GitPath
 			       },		
 		mnesia:write(Record) end,
     mnesia:transaction(F).
@@ -98,8 +89,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Name,Info,Status}||
-		       {?RECORD,_Id,Name,Info,Status}<-Z]
+		   [{App,Vsn,GitPath}||
+		       {?RECORD,_Id,App,Vsn,GitPath}<-Z]
 	   end,
     Result.
 
@@ -121,8 +112,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{Name,Info,Status}||
-			   {?RECORD,_Id,Name,Info,Status}<-Z],
+		   [R]=[{App,Vsn,GitPath}||
+			   {?RECORD,_Id,App,Vsn,GitPath}<-Z],
 		   R
 	   end,
     Result.
@@ -139,22 +130,6 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
-update_status(Object,NewStatus)->
- F = fun() -> 
-	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
-				       X#?RECORD.id==Object])),
-	     case RecordList of
-		 []->
-		     mnesia:abort(?TABLE);
-		 [S1]->
-		     NewRecord=S1#?RECORD{status=NewStatus},
-		     mnesia:delete_object(S1),
-		     mnesia:write(NewRecord)
-	     end
-		 
-     end,
-    mnesia:transaction(F).
-    
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,
@@ -167,28 +142,17 @@ do(Q) ->
     Result.
 
 %%--------------------------------------------------------------------
--define(Extension,".deployment").
-data_from_file(Dir)->
-    {ok,Files}=file:list_dir(Dir),
-    HostFiles=[File||File<-Files,
-		     ?Extension=:=filename:extension(File)],
-    HostFileNames=[filename:join(Dir,File)||File<-HostFiles],
-    data(HostFileNames).
-    
 
-data(HostFileNames)->
-    data(HostFileNames,[]).
+data_from_file(File)->
+    {ok,I}=file:consult(File),
+    data(I).
+data(ServiceInfo)->
+    data(ServiceInfo,[]).
 data([],List)->
    % io:format("List ~p~n",[List]),
     List;
-data([HostFile|T],Acc)->
-    {ok,I}=file:consult(HostFile),
-  % io:format("I ~p~n",[I]),
-    Id=proplists:get_value(name,I),
-    Name=proplists:get_value(name,I),
-    Info=proplists:get_value(info,I),
-    Status=not_deployed,
-  %  io:format("~p~n",[{Id,Name,Info,Status}]),
-    NewAcc=[{Id,Name,Info,Status}|Acc],
+data([{App,Vsn,GitPath}|T],Acc)->
+   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
+    NewAcc=[{{App,Vsn},App,Vsn,GitPath}|Acc],
     data(T,NewAcc).
 
