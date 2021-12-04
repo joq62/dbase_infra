@@ -25,6 +25,12 @@ access_info(Id)->
     Record=read_record(Id),
     Record#?RECORD.access_info.
 
+status()->
+    AllRecords=read_all_record(),
+    [{X#?RECORD.id,X#?RECORD.status}||X<-AllRecords].
+status(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.status.
 
 hosts()->
     AllRecords=read_all_record(),
@@ -50,9 +56,6 @@ dirs_to_keep(Id)->
 application_dir(Id)->
     Record=read_record(Id),
     Record#?RECORD.application_dir.
-status(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.status.
 
 ip(Id)->
     I=access_info(Id),
