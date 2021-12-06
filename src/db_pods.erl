@@ -1,19 +1,20 @@
--module(db_deployment).
+-module(db_pods).
 -import(lists, [foreach/2]).
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
 
--define(TABLE,deployment).
--define(RECORD,deployment). 
+-define(TABLE,pods).
+-define(RECORD,pods). 
 
 
--record(deployment,
+-record(pods,
 	{
 	 id,
 	 name,
 	 vsn,
-	 pod_specs,
+	 application,
+	 host,
 	 status
 	}).
 
@@ -37,9 +38,18 @@ vsn()->
 vsn(Id)->
     Record=read_record(Id),
     Record#?RECORD.vsn.
-pod_specs(Id)->
+ids()->
+    AllRecords=read_all_record(),
+    [Id||Id<-[X#?RECORD.id||X<-AllRecords]].
+
+
+application(Id)->
     Record=read_record(Id),
-    Record#?RECORD.pod_specs.
+    Record#?RECORD.application.
+
+host(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.host.
 
     
 %%------------------------- Generic  dbase commands ----------------------
@@ -49,14 +59,15 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,Name,Vsn,PodSpecs,Status}) ->
+create({Id,Name,Vsn,Application,Host,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
 				name=Name,
 				vsn=Vsn,
-				pod_specs=PodSpecs,
+				application=Application,
+				host=Host,
 				status=Status
 			       },		
 		mnesia:write(Record) end,
@@ -105,8 +116,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Id,Name,Vsn,PodSpecs,Status}||
-		       {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z]
+		   [{Id,Name,Vsn,Application,Host,Status}||
+		       {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z]
 	   end,
     Result.
 
@@ -128,8 +139,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{Id,Name,Vsn,PodSpecs,Status}||
-			   {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z],
+		   [R]=[{Id,Name,Vsn,Application,Host,Status}||
+			   {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -174,21 +185,22 @@ do(Q) ->
     Result.
 
 %%--------------------------------------------------------------------
--define(Extension,".deployment").
+-define(Extension,".pod_spec").
 % {name,"mydivi"}.
 % {vsn,"1.0.0"}.
-% {pod_specs,[{infra,"1.0.0"}]}.
+% {info,[{mydivi,"1.0.0"}]}.
+% {host,{preffered,["c203"]}}.
 
 data_from_file(Dir)->
     {ok,Files}=file:list_dir(Dir),
-    InfoFiles=[File||File<-Files,
+    DataFiles=[File||File<-Files,
 		     ?Extension=:=filename:extension(File)],
-    InfoFileNames=[filename:join(Dir,File)||File<-InfoFiles],
-    data(InfoFileNames).
+    DataFileNames=[filename:join(Dir,File)||File<-DataFiles],
+    data(DataFileNames).
     
 
-data(InfoFileNames)->
-    data(InfoFileNames,[]).
+data(DataFileNames)->
+    data(DataFileNames,[]).
 data([],List)->
    % io:format("List ~p~n",[List]),
     List;
@@ -197,8 +209,9 @@ data([File|T],Acc)->
     Name=proplists:get_value(name,I),
     Vsn=proplists:get_value(vsn,I),
     Id={Name,Vsn},
-    PodSpecs=proplists:get_value(pod_specs,I),
+    Application=proplists:get_value(application,I),
+    Host=proplists:get_value(host,I),
     Status=stopped,
-%    io:format("~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,Id,Name,Vsn,PodSpecs,Status}]),
-    NewAcc=[{Id,Name,Vsn,PodSpecs,Status}|Acc],
+   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
+    NewAcc=[{Id,Name,Vsn,Application,Host,Status}|Acc],
     data(T,NewAcc).
