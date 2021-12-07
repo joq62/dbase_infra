@@ -40,6 +40,10 @@ ids()->
     AllRecords=read_all_record(),
     [Id||Id<-[X#?RECORD.id||X<-AllRecords]].
 
+hostname(Id)->
+    Record=read_record(Id),
+    {HostName,NodeName}=Record#?RECORD.id,
+    HostName.
 
 start_args(Id)->
     Record=read_record(Id),
