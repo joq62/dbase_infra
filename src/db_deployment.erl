@@ -25,6 +25,46 @@ status(Id)->
     Record=read_record(Id),
     Record#?RECORD.status.
 
+is_deployed(Id)->
+    case status(Id) of
+	stopped->
+	    false;
+	_Status ->
+	    true
+    end.
+
+deploy_node(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [Node||[PodId,_HostId,Node,_AppList]<-Status]
+    end.
+deploy_pod(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [PodId||[PodId,_HostId,_Node,_AppList]<-Status]
+    end.
+deploy_host(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status->
+	    [HostId||[_PodId,HostId,_Node,_AppList]<-Status]
+    end.
+deploy_apps(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [{Node,AppList}||[_PodId,_HostId,Node,AppList]<-Status]
+    end.
+
+
+
+
 name()->
     AllRecords=read_all_record(),
     [I||I<-[X#?RECORD.name||X<-AllRecords]].
