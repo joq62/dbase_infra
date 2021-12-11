@@ -19,23 +19,11 @@
 
 %%------------------------- Application specific commands ----------------
 access_info()->   
-    Result=case read_all_record() of 
-	       {error,Reason}->
-		   {error,Reason};
-	       AllRecords->
-		    [{X#?RECORD.id,X#?RECORD.access_info}||X<-AllRecords]
-	   end,
-    Result.
-
-   
+    AllRecords=read_all_record(),
+    [{X#?RECORD.id,X#?RECORD.access_info}||X<-AllRecords].
 access_info(Id)->   
-    Result=case read_record(Id) of
-	       {error,Reason}->
-		   {error,Reason};
-	       Record->
-		   Record#?RECORD.access_info
-	   end,
-    Result.
+    Record=read_record(Id),
+    Record#?RECORD.access_info.
 
 status()->
     AllRecords=read_all_record(),
@@ -123,12 +111,7 @@ create({Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
 				status=Status
 			       },		
 		mnesia:write(Record) end,
-    case mnesia:transaction(F) of
-	{atomic,ok}->
-	    ok;
-	ErrorReason ->
-	    ErrorReason
-    end.
+    mnesia:transaction(F).
 
 add_table(Node,StorageType)->
     mnesia:add_table_copy(?TABLE, Node, StorageType).
@@ -183,9 +166,7 @@ read_record(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
-	       []->
-		   {error,[eexists, Object]};
+		   {aborted,Reason};
 	       [X]->
 		   X
 	   end,
@@ -197,8 +178,6 @@ read(Object) ->
     Result=case Z of
 	       {aborted,Reason}->
 		   {aborted,Reason};
-	       []->
-		   {error,[eexists, Object]};
 	       _->
 		   [R]=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
 			   {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z],

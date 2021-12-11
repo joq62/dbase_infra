@@ -6,13 +6,12 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include("controller.hrl").
+
 %% --------------------------------------------------------------------
 %% Behavioural exports
 %% --------------------------------------------------------------------
 -export([
-	 get_dbase_specs/0,
-	 load_from_file/3,
+	 load_from_file/2,
 	 add_dynamic/1,
 	 dynamic_load_table/2,
 	 boot/0
@@ -61,20 +60,13 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 
 
 
-load_from_file(Module,Dir,Directive)->
-    gen_server:call(?SERVER, {load_from_file,Module,Dir,Directive},infinity).
+load_from_file(Module,Dir)->
+    gen_server:call(?SERVER, {load_from_file,Module,Dir},infinity).
 
 add_dynamic(Node)->
     gen_server:call(?SERVER, {add_dynamic,Node},infinity).
 dynamic_load_table(Node,Module)->
     gen_server:call(?SERVER,{dynamic_load_table,Node,Module},infinity).
-get_dbase_specs()->
-    [{db_host,?HostConfiguration,yes},
-     {db_service_catalog,?ServiceCatalog,yes},
-     {db_deployment,?Deployments,yes},
-     {db_pods,?PodSpecs,yes},
-     {db_deploy_state,na,no}].
-    
 
 %% ====================================================================
 %% Internal functions

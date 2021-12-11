@@ -1,31 +1,86 @@
--module(db_service_catalog).
+-module(db_deployment).
 -import(lists, [foreach/2]).
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
 
--define(TABLE,service_catalog).
--define(RECORD,service_catalog). 
--record(service_catalog,
+-define(TABLE,deployment).
+-define(RECORD,deployment). 
+
+
+-record(deployment,
 	{
 	 id,
-	 app,
+	 name,
 	 vsn,
-	 git_path
+	 pod_specs,
+	 status
 	}).
 
 %%------------------------- Application specific commands ----------------
+status()->
+    AllRecords=read_all_record(),
+    [{X#?RECORD.id,X#?RECORD.status}||X<-AllRecords].
+status(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.status.
+
+is_deployed(Id)->
+    case status(Id) of
+	stopped->
+	    false;
+	_Status ->
+	    true
+    end.
+
+deploy_node(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [{PodId,Node}||[PodId,_HostId,Node,_AppList]<-Status]
+    end.
+deploy_pod(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [PodId||[PodId,_HostId,_Node,_AppList]<-Status]
+    end.
+deploy_host(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status->
+	    [HostId||[_PodId,HostId,_Node,_AppList]<-Status]
+    end.
+deploy_apps(Id)->
+    case status(Id) of
+	stopped->
+	    stopped;
+	Status ->
+	    [{Node,AppList}||[_PodId,_HostId,Node,AppList]<-Status]
+    end.
+
+
+
+
+name()->
+    AllRecords=read_all_record(),
+    [I||I<-[X#?RECORD.name||X<-AllRecords]].
+name(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.name.
+vsn()->
+    AllRecords=read_all_record(),
+    [I||I<-[X#?RECORD.vsn||X<-AllRecords]].
 vsn(Id)->
     Record=read_record(Id),
     Record#?RECORD.vsn.
-
-app(Id)->
+pod_specs(Id)->
     Record=read_record(Id),
-    Record#?RECORD.app.
+    Record#?RECORD.pod_specs.
 
-git_path(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.git_path.
     
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
@@ -34,14 +89,15 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,App,Vsn,GitPath}) ->
+create({Id,Name,Vsn,PodSpecs,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
-				app=App,
+				name=Name,
 				vsn=Vsn,
-				git_path=GitPath
+				pod_specs=PodSpecs,
+				status=Status
 			       },		
 		mnesia:write(Record) end,
     case mnesia:transaction(F) of
@@ -83,7 +139,7 @@ read_all_record()->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
 		   Z
 	   end,
@@ -92,10 +148,10 @@ read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
-		   [{App,Vsn,GitPath}||
-		       {?RECORD,_Id,App,Vsn,GitPath}<-Z]
+		   [{Id,Name,Vsn,PodSpecs,Status}||
+		       {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z]
 	   end,
     Result.
 
@@ -104,7 +160,7 @@ read_record(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       [X]->
 		   X
 	   end,
@@ -115,10 +171,10 @@ read(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
-		   [R]=[{App,Vsn,GitPath}||
-			   {?RECORD,_Id,App,Vsn,GitPath}<-Z],
+		   [R]=[{Id,Name,Vsn,PodSpecs,Status}||
+			   {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -135,6 +191,22 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
+update_status(Object,NewStatus)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     NewRecord=S1#?RECORD{status=NewStatus},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+    
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,
@@ -147,17 +219,31 @@ do(Q) ->
     Result.
 
 %%--------------------------------------------------------------------
+-define(Extension,".deployment").
+% {name,"mydivi"}.
+% {vsn,"1.0.0"}.
+% {pod_specs,[{infra,"1.0.0"}]}.
 
-data_from_file(File)->
-    {ok,I}=file:consult(File),
-    data(I).
-data(ServiceInfo)->
-    data(ServiceInfo,[]).
+data_from_file(Dir)->
+    {ok,Files}=file:list_dir(Dir),
+    InfoFiles=[File||File<-Files,
+		     ?Extension=:=filename:extension(File)],
+    InfoFileNames=[filename:join(Dir,File)||File<-InfoFiles],
+    data(InfoFileNames).
+    
+
+data(InfoFileNames)->
+    data(InfoFileNames,[]).
 data([],List)->
    % io:format("List ~p~n",[List]),
     List;
-data([{App,Vsn,GitPath}|T],Acc)->
-   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{{App,Vsn},App,Vsn,GitPath}|Acc],
+data([File|T],Acc)->
+    {ok,I}=file:consult(File),
+    Name=proplists:get_value(name,I),
+    Vsn=proplists:get_value(vsn,I),
+    Id={Name,Vsn},
+    PodSpecs=proplists:get_value(pod_specs,I),
+    Status=stopped,
+%    io:format("~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,Id,Name,Vsn,PodSpecs,Status}]),
+    NewAcc=[{Id,Name,Vsn,PodSpecs,Status}|Acc],
     data(T,NewAcc).
-

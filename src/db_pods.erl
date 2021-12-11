@@ -14,17 +14,12 @@
 	 name,
 	 vsn,
 	 application,
-	 host,
-	 status
+	 host
+
 	}).
 
 %%------------------------- Application specific commands ----------------
-status()->
-    AllRecords=read_all_record(),
-    [{X#?RECORD.id,X#?RECORD.status}||X<-AllRecords].
-status(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.status.
+
 
 name()->
     AllRecords=read_all_record(),
@@ -59,19 +54,22 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,Name,Vsn,Application,Host,Status}) ->
-%   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
+create({Id,Name,Vsn,Application,Host}) ->
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
 				name=Name,
 				vsn=Vsn,
 				application=Application,
-				host=Host,
-				status=Status
+				host=Host
 			       },		
 		mnesia:write(Record) end,
-    mnesia:transaction(F).
+    case mnesia:transaction(F) of
+	{atomic,ok}->
+	    ok;
+	ErrorReason ->
+	    ErrorReason
+    end.
 
 add_table(Node,StorageType)->
     mnesia:add_table_copy(?TABLE, Node, StorageType).
@@ -116,8 +114,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Id,Name,Vsn,Application,Host,Status}||
-		       {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z]
+		   [{Id,Name,Vsn,Application,Host}||
+		       {?RECORD,Id,Name,Vsn,Application,Host}<-Z]
 	   end,
     Result.
 
@@ -139,8 +137,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{Id,Name,Vsn,Application,Host,Status}||
-			   {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z],
+		   [R]=[{Id,Name,Vsn,Application,Host}||
+			   {?RECORD,Id,Name,Vsn,Application,Host}<-Z],
 		   R
 	   end,
     Result.
@@ -156,21 +154,6 @@ delete(Object) ->
 			mnesia:delete_object(S1) 
 		end
 	end,
-    mnesia:transaction(F).
-update_status(Object,NewStatus)->
- F = fun() -> 
-	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
-				       X#?RECORD.id==Object])),
-	     case RecordList of
-		 []->
-		     mnesia:abort(?TABLE);
-		 [S1]->
-		     NewRecord=S1#?RECORD{status=NewStatus},
-		     mnesia:delete_object(S1),
-		     mnesia:write(NewRecord)
-	     end
-		 
-     end,
     mnesia:transaction(F).
     
 
@@ -211,7 +194,5 @@ data([File|T],Acc)->
     Id={Name,Vsn},
     Application=proplists:get_value(application,I),
     Host=proplists:get_value(host,I),
-    Status=stopped,
-   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{Id,Name,Vsn,Application,Host,Status}|Acc],
+    NewAcc=[{Id,Name,Vsn,Application,Host}|Acc],
     data(T,NewAcc).

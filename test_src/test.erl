@@ -31,13 +31,29 @@ start()->
     ok=setup(),
   %  io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
 
-  %  io:format("~p~n",[{"Start install_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=host_test(),
-    io:format("~p~n",[{"Stop install_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+  %  io:format("~p~n",[{"Start db_host_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_host_test:start(),
+    io:format("~p~n",[{"Stop db_host_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
+ %  io:format("~p~n",[{"Start db_deployment_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_deployment_test:start(),
+    io:format("~p~n",[{"Stop db_deployment_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
+%  io:format("~p~n",[{"Start db_pods_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_pods_test:start(),
+    io:format("~p~n",[{"Stop db_pods_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
+%  io:format("~p~n",[{"Start db_service_catalog_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_service_catalog_test:start(),
+    io:format("~p~n",[{"Stop db_service_catalog_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
+%  io:format("~p~n",[{"Start db_deploy_state_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_deploy_state_test:start(),
+    io:format("~p~n",[{"Stop db_deploy_state_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
  %  io:format("~p~n",[{"Start dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=dbase_test(),
-    io:format("~p~n",[{"Stop dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    ok=dbase_test(),
+%    io:format("~p~n",[{"Stop dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
   %  io:format("~p~n",[{"Start monkey()",?MODULE,?FUNCTION_NAME,?LINE}]),
   %  ok=monkey(),
@@ -52,23 +68,6 @@ start()->
     io:format("------>"++atom_to_list(?MODULE)++" ENDED SUCCESSFUL ---------"),
     ok.
 
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-host_test()->
-    host_test:start().
-   
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-dbase_test()->
-    dbase_test:start().
 
 
 

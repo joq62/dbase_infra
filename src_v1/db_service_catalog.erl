@@ -44,12 +44,7 @@ create({Id,App,Vsn,GitPath}) ->
 				git_path=GitPath
 			       },		
 		mnesia:write(Record) end,
-    case mnesia:transaction(F) of
-	{atomic,ok}->
-	    ok;
-	ErrorReason ->
-	    ErrorReason
-    end.
+    mnesia:transaction(F).
 
 add_table(Node,StorageType)->
     mnesia:add_table_copy(?TABLE, Node, StorageType).
@@ -83,7 +78,7 @@ read_all_record()->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
 		   Z
 	   end,
@@ -92,7 +87,7 @@ read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
 		   [{App,Vsn,GitPath}||
 		       {?RECORD,_Id,App,Vsn,GitPath}<-Z]
@@ -104,7 +99,7 @@ read_record(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       [X]->
 		   X
 	   end,
@@ -115,7 +110,7 @@ read(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
 		   [R]=[{App,Vsn,GitPath}||
 			   {?RECORD,_Id,App,Vsn,GitPath}<-Z],

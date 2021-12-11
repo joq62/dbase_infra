@@ -1,32 +1,73 @@
--module(db_service_catalog).
+-module(db_deploy_state).
 -import(lists, [foreach/2]).
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
 
--define(TABLE,service_catalog).
--define(RECORD,service_catalog). 
--record(service_catalog,
+-define(TABLE,deploy_state).
+-define(RECORD,deploy_state). 
+
+
+-record(deploy_state,
 	{
-	 id,
-	 app,
-	 vsn,
-	 git_path
+	 id, %deloyment id
+	 deployment, 
+	 pods   %[{PodId,Node,HostId},,,]
 	}).
 
 %%------------------------- Application specific commands ----------------
-vsn(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.vsn.
 
-app(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.app.
+deploy_id()->
+    Result=case read_all_record() of
+	       {aborted,Reason}->
+		   {error,Reason};
+	       Records->
+		   [Record#?RECORD.id||Record<-Records]
+	   end,
+    Result.
+deployment_id(Id)->
+    Result=case read_record(Id) of
+	       {aborted,Reason}->
+		   {error,Reason};
+	       Record->
+		   Record#?RECORD.deployment
+	   end,
+    Result.
 
-git_path(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.git_path.
-    
+deployment(WantedDeploymentId)->
+    Result=case read_all_record() of
+	       {aborted,Reason}->
+		   {error,Reason};
+	       Records->
+		   [{Id,DeploymentId,Pods}||{?RECORD,Id,DeploymentId,Pods}<-Records,
+					    WantedDeploymentId=:=DeploymentId]
+	   end,
+    Result.
+
+pods(Id)->
+    Result=case read_record(Id) of
+	       {aborted,Reason}->
+		   {error,Reason};
+	       Record->
+		   Record#?RECORD.pods
+	   end,
+    Result.
+
+pod_node(Id,WantedPodId)->
+    Result=case pods(Id) of
+	       {error,Reason}->
+		   {error,Reason};
+	       Pods->
+		   case lists:keyfind(WantedPodId,1,Pods) of
+		       false->
+			   {error,[eexist,WantedPodId]};
+		       {_PodId,_Host,Node}->
+			   Node
+		   end
+	   end,
+    Result.
+	
+
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
     {atomic,ok}=mnesia:create_table(?TABLE, [{attributes, record_info(fields, ?RECORD)}]),
@@ -34,14 +75,13 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,App,Vsn,GitPath}) ->
-%   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
+create(DeploymentId,Pods) ->
+    Id=erlang:system_time(microsecond),
     F = fun() ->
 		Record=#?RECORD{
-				id=Id,
-				app=App,
-				vsn=Vsn,
-				git_path=GitPath
+				id=Id, %Unique id
+				deployment=DeploymentId, 
+				pods=Pods
 			       },		
 		mnesia:write(Record) end,
     case mnesia:transaction(F) of
@@ -94,8 +134,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {error,Reason};
 	       _->
-		   [{App,Vsn,GitPath}||
-		       {?RECORD,_Id,App,Vsn,GitPath}<-Z]
+		   [{Id,DeploymentId,Pods}||
+		       {?RECORD,Id,DeploymentId,Pods}<-Z]
 	   end,
     Result.
 
@@ -117,8 +157,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {error,Reason};
 	       _->
-		   [R]=[{App,Vsn,GitPath}||
-			   {?RECORD,_Id,App,Vsn,GitPath}<-Z],
+		   [R]=[{Id,DeploymentId,Pods}||
+			   {?RECORD,Id,DeploymentId,Pods}<-Z],
 		   R
 	   end,
     Result.
@@ -135,6 +175,25 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
+update_status(Object,PodInfo)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     %
+		     {PodId,_HostId,_Node}=PodInfo,		     
+		     NewPods=lists:keyreplace(PodId,1,S1#?RECORD.pods,PodInfo),
+		     NewRecord=S1#?RECORD{pods=NewPods},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+    
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,
@@ -147,17 +206,3 @@ do(Q) ->
     Result.
 
 %%--------------------------------------------------------------------
-
-data_from_file(File)->
-    {ok,I}=file:consult(File),
-    data(I).
-data(ServiceInfo)->
-    data(ServiceInfo,[]).
-data([],List)->
-   % io:format("List ~p~n",[List]),
-    List;
-data([{App,Vsn,GitPath}|T],Acc)->
-   % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{{App,Vsn},App,Vsn,GitPath}|Acc],
-    data(T,NewAcc).
-

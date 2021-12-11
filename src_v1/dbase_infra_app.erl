@@ -1,32 +1,32 @@
 %% Author: uabjle
 %% Created: 10 dec 2012
 %% Description: TODO: Add description to application_org
--module(dbase_infra). 
+-module(dbase_infra_app). 
 
+-behaviour(application).
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include("controller.hrl").
+
 %% --------------------------------------------------------------------
 %% Behavioural exports
 %% --------------------------------------------------------------------
 -export([
-	 get_dbase_specs/0,
-	 load_from_file/3,
-	 add_dynamic/1,
-	 dynamic_load_table/2,
-	 boot/0
-	]).
+	 start/2,
+	 stop/1
+        ]).
 
 %% --------------------------------------------------------------------
 %% Internal exports
 %% --------------------------------------------------------------------
--export([start/0,
-	 stop/0]).
+-export([
+	 
+	]).
+
 %% --------------------------------------------------------------------
 %% Macros
 %% --------------------------------------------------------------------
--define(SERVER,dbase_infra_server).
+
 %% --------------------------------------------------------------------
 %% Records
 %% --------------------------------------------------------------------
@@ -46,8 +46,7 @@
 %%          {ok, Pid, State} |
 %%          {error, Reason}
 %% --------------------------------------------------------------------
-boot()->
-    application:start(?SERVER).
+
 
 
 %% --------------------------------------------------------------------
@@ -56,27 +55,21 @@ boot()->
 %%          {ok, Pid, State} |
 %%          {error, Reason}
 %% --------------------------------------------------------------------
-start()-> gen_server:start_link({local, ?SERVER}, ?SERVER, [], []).
-stop()-> gen_server:call(?SERVER, {stop},infinity).
-
-
-
-load_from_file(Module,Dir,Directive)->
-    gen_server:call(?SERVER, {load_from_file,Module,Dir,Directive},infinity).
-
-add_dynamic(Node)->
-    gen_server:call(?SERVER, {add_dynamic,Node},infinity).
-dynamic_load_table(Node,Module)->
-    gen_server:call(?SERVER,{dynamic_load_table,Node,Module},infinity).
-get_dbase_specs()->
-    [{db_host,?HostConfiguration,yes},
-     {db_service_catalog,?ServiceCatalog,yes},
-     {db_deployment,?Deployments,yes},
-     {db_pods,?PodSpecs,yes},
-     {db_deploy_state,na,no}].
-    
+start(_Type, _StartArgs) ->
+  %  ok=init(),
+    {ok,Pid}= dbase_infra_sup:start_link(),
+    {ok,Pid}.
+   
+%% --------------------------------------------------------------------
+%% Func: stop/1
+%% Returns: any
+%% --------------------------------------------------------------------
+stop(_State) ->
+    ok.
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
+init()->
 
+    ok.

@@ -18,53 +18,6 @@
 	}).
 
 %%------------------------- Application specific commands ----------------
-status()->
-    AllRecords=read_all_record(),
-    [{X#?RECORD.id,X#?RECORD.status}||X<-AllRecords].
-status(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.status.
-
-is_deployed(Id)->
-    case status(Id) of
-	stopped->
-	    false;
-	_Status ->
-	    true
-    end.
-
-deploy_node(Id)->
-    case status(Id) of
-	stopped->
-	    stopped;
-	Status ->
-	    [Node||[PodId,_HostId,Node,_AppList]<-Status]
-    end.
-deploy_pod(Id)->
-    case status(Id) of
-	stopped->
-	    stopped;
-	Status ->
-	    [PodId||[PodId,_HostId,_Node,_AppList]<-Status]
-    end.
-deploy_host(Id)->
-    case status(Id) of
-	stopped->
-	    stopped;
-	Status->
-	    [HostId||[_PodId,HostId,_Node,_AppList]<-Status]
-    end.
-deploy_apps(Id)->
-    case status(Id) of
-	stopped->
-	    stopped;
-	Status ->
-	    [{Node,AppList}||[_PodId,_HostId,Node,AppList]<-Status]
-    end.
-
-
-
-
 name()->
     AllRecords=read_all_record(),
     [I||I<-[X#?RECORD.name||X<-AllRecords]].
@@ -100,7 +53,12 @@ create({Id,Name,Vsn,PodSpecs,Status}) ->
 				status=Status
 			       },		
 		mnesia:write(Record) end,
-    mnesia:transaction(F).
+    case mnesia:transaction(F) of
+	{atomic,ok}->
+	    ok;
+	ErrorReason ->
+	    ErrorReason
+    end.
 
 add_table(Node,StorageType)->
     mnesia:add_table_copy(?TABLE, Node, StorageType).
@@ -186,22 +144,7 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
-update_status(Object,NewStatus)->
- F = fun() -> 
-	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
-				       X#?RECORD.id==Object])),
-	     case RecordList of
-		 []->
-		     mnesia:abort(?TABLE);
-		 [S1]->
-		     NewRecord=S1#?RECORD{status=NewStatus},
-		     mnesia:delete_object(S1),
-		     mnesia:write(NewRecord)
-	     end
-		 
-     end,
-    mnesia:transaction(F).
-    
+   
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,

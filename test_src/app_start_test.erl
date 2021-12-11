@@ -10,6 +10,7 @@
 %% Include files
 %% --------------------------------------------------------------------
 -include_lib("eunit/include/eunit.hrl").
+-include("controller.hrl").
 %% --------------------------------------------------------------------
 
 %% External exports
@@ -51,9 +52,23 @@ start()->
 %% --------------------------------------------------------------------
 
 setup()->
+    {TestDir,TestPath}=?TestConfig,
+    {Dir,Path}=?Config,
+    os:cmd("rm -rf "++TestDir),
+    os:cmd("rm -rf "++Dir),
+    os:cmd("git clone "++TestPath),
+    os:cmd("git clone "++Path),
 
-   % ok=application:start(controller),
- 
+    %%--- Mnesia start
+    application:start(dbase_infra),
+    DbaseSpecs=dbase_infra:get_dbase_specs(),
+    [[ok,ok,ok,ok],
+     [ok,ok,ok,ok,ok,ok,ok,ok,ok,ok],
+     [ok,ok,ok,ok],
+     [ok,ok,ok,ok,ok,ok,ok,ok,ok],
+     [ok]]=[dbase_infra:load_from_file(Module,Dir,Directive)||{Module,Dir,Directive}<-DbaseSpecs],
+
+   
     ok.
 
 

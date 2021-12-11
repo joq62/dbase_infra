@@ -1,31 +1,56 @@
--module(db_service_catalog).
+-module(db_pods).
 -import(lists, [foreach/2]).
 -compile(export_all).
 
 -include_lib("stdlib/include/qlc.hrl").
 
--define(TABLE,service_catalog).
--define(RECORD,service_catalog). 
--record(service_catalog,
+-define(TABLE,pods).
+-define(RECORD,pods). 
+
+
+-record(pods,
 	{
 	 id,
-	 app,
+	 name,
 	 vsn,
-	 git_path
+	 application,
+	 host,
+	 status
 	}).
 
 %%------------------------- Application specific commands ----------------
+status()->
+    AllRecords=read_all_record(),
+    [{X#?RECORD.id,X#?RECORD.status}||X<-AllRecords].
+status(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.status.
+
+name()->
+    AllRecords=read_all_record(),
+    [I||I<-[X#?RECORD.name||X<-AllRecords]].
+name(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.name.
+vsn()->
+    AllRecords=read_all_record(),
+    [I||I<-[X#?RECORD.vsn||X<-AllRecords]].
 vsn(Id)->
     Record=read_record(Id),
     Record#?RECORD.vsn.
+ids()->
+    AllRecords=read_all_record(),
+    [Id||Id<-[X#?RECORD.id||X<-AllRecords]].
 
-app(Id)->
-    Record=read_record(Id),
-    Record#?RECORD.app.
 
-git_path(Id)->
+application(Id)->
     Record=read_record(Id),
-    Record#?RECORD.git_path.
+    Record#?RECORD.application.
+
+host(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.host.
+
     
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
@@ -34,22 +59,19 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,App,Vsn,GitPath}) ->
+create({Id,Name,Vsn,Application,Host,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
-				app=App,
+				name=Name,
 				vsn=Vsn,
-				git_path=GitPath
+				application=Application,
+				host=Host,
+				status=Status
 			       },		
 		mnesia:write(Record) end,
-    case mnesia:transaction(F) of
-	{atomic,ok}->
-	    ok;
-	ErrorReason ->
-	    ErrorReason
-    end.
+    mnesia:transaction(F).
 
 add_table(Node,StorageType)->
     mnesia:add_table_copy(?TABLE, Node, StorageType).
@@ -83,7 +105,7 @@ read_all_record()->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
 		   Z
 	   end,
@@ -92,10 +114,10 @@ read_all() ->
     Z=do(qlc:q([X || X <- mnesia:table(?TABLE)])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
-		   [{App,Vsn,GitPath}||
-		       {?RECORD,_Id,App,Vsn,GitPath}<-Z]
+		   [{Id,Name,Vsn,Application,Host,Status}||
+		       {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z]
 	   end,
     Result.
 
@@ -104,7 +126,7 @@ read_record(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       [X]->
 		   X
 	   end,
@@ -115,10 +137,10 @@ read(Object) ->
 		   X#?RECORD.id==Object])),
     Result=case Z of
 	       {aborted,Reason}->
-		   {error,Reason};
+		   {aborted,Reason};
 	       _->
-		   [R]=[{App,Vsn,GitPath}||
-			   {?RECORD,_Id,App,Vsn,GitPath}<-Z],
+		   [R]=[{Id,Name,Vsn,Application,Host,Status}||
+			   {?RECORD,Id,Name,Vsn,Application,Host,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -135,6 +157,22 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
+update_status(Object,NewStatus)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     NewRecord=S1#?RECORD{status=NewStatus},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+    
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,
@@ -147,17 +185,33 @@ do(Q) ->
     Result.
 
 %%--------------------------------------------------------------------
+-define(Extension,".pod_spec").
+% {name,"mydivi"}.
+% {vsn,"1.0.0"}.
+% {info,[{mydivi,"1.0.0"}]}.
+% {host,{preffered,["c203"]}}.
 
-data_from_file(File)->
-    {ok,I}=file:consult(File),
-    data(I).
-data(ServiceInfo)->
-    data(ServiceInfo,[]).
+data_from_file(Dir)->
+    {ok,Files}=file:list_dir(Dir),
+    DataFiles=[File||File<-Files,
+		     ?Extension=:=filename:extension(File)],
+    DataFileNames=[filename:join(Dir,File)||File<-DataFiles],
+    data(DataFileNames).
+    
+
+data(DataFileNames)->
+    data(DataFileNames,[]).
 data([],List)->
    % io:format("List ~p~n",[List]),
     List;
-data([{App,Vsn,GitPath}|T],Acc)->
+data([File|T],Acc)->
+    {ok,I}=file:consult(File),
+    Name=proplists:get_value(name,I),
+    Vsn=proplists:get_value(vsn,I),
+    Id={Name,Vsn},
+    Application=proplists:get_value(application,I),
+    Host=proplists:get_value(host,I),
+    Status=stopped,
    % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{{App,Vsn},App,Vsn,GitPath}|Acc],
+    NewAcc=[{Id,Name,Vsn,Application,Host,Status}|Acc],
     data(T,NewAcc).
-

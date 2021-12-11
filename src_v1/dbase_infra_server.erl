@@ -69,13 +69,10 @@ init([]) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
-handle_call({load_from_file,Module,Dir,yes},_From, State) ->
+handle_call({load_from_file,Module,Dir},_From, State) ->
     ok=rpc:call(node(),Module,create_table,[],5*1000),
     AllData=rpc:call(node(),Module,data_from_file,[Dir],5*1000),
     Reply=[rpc:call(node(),Module,create,[Data],5*1000)||Data<-AllData],
-    {reply, Reply, State};
-handle_call({load_from_file,Module,na,no},_From, State) ->
-    Reply=[rpc:call(node(),Module,create_table,[],5*1000)],
     {reply, Reply, State};
 
 
