@@ -31,8 +31,7 @@
 -define(logger_info(Severity,Msg,Args),
 	{date(),time(),node(),Severity,Msg,?MODULE,?FUNCTION_NAME,?LINE,Args,new}).
 start()->
-    ok=db_logger:create_table(),
-   % init 
+   
   
     L1=?logger_info(alert,"test1",[]),
     L2=?logger_info(alert,"test2",[23,76]),

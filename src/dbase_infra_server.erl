@@ -72,10 +72,16 @@ init([]) ->
 handle_call({load_from_file,Module,Dir,yes},_From, State) ->
     ok=rpc:call(node(),Module,create_table,[],5*1000),
     AllData=rpc:call(node(),Module,data_from_file,[Dir],5*1000),
-    Reply=[rpc:call(node(),Module,create,[Data],5*1000)||Data<-AllData],
+    CreateResult=[rpc:call(node(),Module,create,[Data],5*1000)||Data<-AllData],
+    Reply=case [R||R<-CreateResult,R/=ok] of
+	      []->
+		  ok;
+	      ErrorList->
+		  ErrorList
+	  end,
     {reply, Reply, State};
 handle_call({load_from_file,Module,na,no},_From, State) ->
-    Reply=[rpc:call(node(),Module,create_table,[],5*1000)],
+    Reply=rpc:call(node(),Module,create_table,[],5*1000),
     {reply, Reply, State};
 
 

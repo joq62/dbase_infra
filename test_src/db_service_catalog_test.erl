@@ -62,6 +62,8 @@ cata_info_all()->
 	"https://github.com/joq62/dbase_infra.git"},
        {host,"0.1.0","https://github.com/joq62/host.git"},
        {kublet,"0.1.0","https://github.com/joq62/kublet.git"},
+       {logger_infra,"1.0.0",
+	"https://github.com/joq62/logger_infra.git"},
        {myadd,"1.0.0","https://github.com/joq62/myadd.git"},
        {mydivi,"1.0.0","https://github.com/joq62/mydivi.git"},
        {mymath,"1.0.0","https://github.com/joq62/mymath.git"},

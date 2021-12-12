@@ -6,7 +6,7 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include("controller.hrl").
+-include("dbase_spec.hrl").
 %% --------------------------------------------------------------------
 %% Behavioural exports
 %% --------------------------------------------------------------------
@@ -69,12 +69,7 @@ add_dynamic(Node)->
 dynamic_load_table(Node,Module)->
     gen_server:call(?SERVER,{dynamic_load_table,Node,Module},infinity).
 get_dbase_specs()->
-    [{db_host,?HostConfiguration,yes},
-     {db_service_catalog,?ServiceCatalog,yes},
-     {db_deployment,?Deployments,yes},
-     {db_pods,?PodSpecs,yes},
-     {db_deploy_state,na,no}].
-    
+    ?DbaseSpec.
 
 %% ====================================================================
 %% Internal functions

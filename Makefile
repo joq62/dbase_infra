@@ -6,13 +6,13 @@ all:
 	rm -rf *_specs *_config *.log;
 #	common
 #	cp ../common/src/*.app ebin;
-	erlc -o ebin ../../common/src/*.erl;
+	erlc -I include -o ebin ../../common/src/*.erl;
 #	bully
 #	cp ../bully_election/src/*.app ebin;
 #	erlc -o ebin ../bully_election/src/*.erl;
 #	app
 	cp src/*.app ebin;
-	erlc -I ../controller/include -o ebin src/*.erl;
+	erlc -I include -I ../controller/include -o ebin src/*.erl;
 	echo Done
 unit_test:
 	rm -rf ebin/* src/*.beam *.beam test_src/*.beam test_ebin;
@@ -20,13 +20,13 @@ unit_test:
 	mkdir test_ebin;
 #	common
 #	cp ../common/src/*.app ebin;
-	erlc -o ebin ../../common/src/*.erl;
+	erlc -I include -o ebin ../../common/src/*.erl;
 #	app
 	cp src/*.app ebin;
-	erlc -D debug_flag -I ../controller/include -o ebin src/*.erl;
+	erlc -D debug_flag -I include -I ../controller/include -o ebin src/*.erl;
 #	test application
 	cp test_src/*.app test_ebin;
-	erlc -D debug_flag -I ../controller/include -o test_ebin test_src/*.erl;
+	erlc -D debug_flag -I include -I ../controller/include -o test_ebin test_src/*.erl;
 	erl -pa ebin -pa test_ebin\
 	    -setcookie cookie\
 	    -sname test\

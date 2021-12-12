@@ -47,7 +47,8 @@ nice_print(Id)->
 	    DateTime=Y1++"-"++M1++"-"++D1++" "++H1++":"++Min1++":"++S1++" ",
 	    NodeSeverity=Node1++" "++Severity1++" ",
 	    MFL="{"++Module1++","++Function1++","++Line1++"} ",
-	    io:format("~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,Msg,MFL,Args,Status1])
+	    
+	    io:format("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
     end.
 
 
