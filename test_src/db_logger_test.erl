@@ -43,9 +43,14 @@ start()->
     ok=db_logger:create(L2),
     ok=db_logger:create(L3),
     ok=db_logger:create(L4),
+    SortedList=lists:reverse(lists:sort(mnesia:dirty_all_keys(logger_info))),
+    4=lists:flatlength(mnesia:dirty_all_keys(logger_info)),    
+    [db_logger:nice_print(Id)||Id<-SortedList],
+    io:format(" mellanrum ~n"),
+
+    [db_logger:nice_print(Id)||Id<-lists:sublist(SortedList,2)],
     
-    [db_logger:nice_print(Info)||Info<-db_logger:read_all()],
-    
+
     
     
    

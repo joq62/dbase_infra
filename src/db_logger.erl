@@ -25,26 +25,30 @@
 	}).
 
 %%------------------------- Application specific commands ----------------
-nice_print(Info)->
-    {Id,{Y,M,D},{H,Min,Sec},Node,Severity,Msg,Module,Function,Line,Args,Status}=Info,
-    Y1=integer_to_list(Y),
-    M1=integer_to_list(M),
-    D1=integer_to_list(D),
-    H1=integer_to_list(H),
-    Min1=integer_to_list(Min),
-    S1=integer_to_list(Sec),
-    Node1=atom_to_list(Node),
-    Severity1=atom_to_list(Severity),
-    Module1=atom_to_list(Module),
-    Function1=atom_to_list(Function),
-    Line1=integer_to_list(Line),
-    Status1=atom_to_list(Status),
-    
-    DateTime=Y1++"-"++M1++"-"++D1++" "++H1++":"++Min1++":"++S1++" ",
-    NodeSeverity=Node1++" "++Severity1++" ",
-    MFL="{"++Module1++","++Function1++","++Line1++"} ",
-    io:format("~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,Msg,MFL,Args,Status1]),
-    ok.
+nice_print(Id)->
+    case read(Id) of
+	{aborted,Reason}->
+	    {error,Reason};
+	Info->
+	    {Id,{Y,M,D},{H,Min,Sec},Node,Severity,Msg,Module,Function,Line,Args,Status}=Info,
+	    Y1=integer_to_list(Y),
+	    M1=integer_to_list(M),
+	    D1=integer_to_list(D),
+	    H1=integer_to_list(H),
+	    Min1=integer_to_list(Min),
+	    S1=integer_to_list(Sec),
+	    Node1=atom_to_list(Node),
+	    Severity1=atom_to_list(Severity),
+	    Module1=atom_to_list(Module),
+	    Function1=atom_to_list(Function),
+	    Line1=integer_to_list(Line),
+	    Status1=atom_to_list(Status),
+	    
+	    DateTime=Y1++"-"++M1++"-"++D1++" "++H1++":"++Min1++":"++S1++" ",
+	    NodeSeverity=Node1++" "++Severity1++" ",
+	    MFL="{"++Module1++","++Function1++","++Line1++"} ",
+	    io:format("~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,Msg,MFL,Args,Status1])
+    end.
 
 
 %%------------------------- Generic  dbase commands ----------------------
@@ -145,8 +149,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {error,Reason};
 	       _->
-		   [R]=[{Id,DeploymentId,Pods}||
-			   {?RECORD,Id,DeploymentId,Pods}<-Z],
+		   [R]=[{Id,Date,Time,Node,Severity,Msg,Module,Function,Line,Args,Status}||
+			   {?RECORD,Id,Date,Time,Node,Severity,Msg,Module,Function,Line,Args,Status}<-Z],
 		   R
 	   end,
     Result.
