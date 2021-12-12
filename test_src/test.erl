@@ -51,6 +51,10 @@ start()->
     ok=db_deploy_state_test:start(),
     io:format("~p~n",[{"Stop db_deploy_state_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
+%  io:format("~p~n",[{"Start db_logger_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=db_logger_test:start(),
+    io:format("~p~n",[{"Stop db_logger_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+
  %  io:format("~p~n",[{"Start dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 %    ok=dbase_test(),
 %    io:format("~p~n",[{"Stop dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
