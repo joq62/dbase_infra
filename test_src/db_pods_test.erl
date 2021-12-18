@@ -9,7 +9,6 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include_lib("kernel/include/logger.hrl").
 -include("controller.hrl").
 %% --------------------------------------------------------------------
 
@@ -49,7 +48,7 @@ start()->
    
     [{mydivi,"1.0.0"},{sd,"1.0.0"}]=db_pods:application({"mydivi_c202","1.0.0"}),
 
-    {preffered,[{"c202","host"}]}=db_pods:host({"mydivi_c202","1.0.0"}),
+    {preffered,[{"c100","host3"}]}=db_pods:host({"mydivi_c202","1.0.0"}),
     {no_preference,[]}=db_pods:host({"sd","1.0.0"}),
     
     
@@ -79,7 +78,7 @@ pods_info_all()->
        {{"myadd","1.0.0"},
 	"myadd","1.0.0",
 	[{myadd,"1.0.0"},{sd,"1.0.0"}],
-	{preffered,[{"c201","host"}]}},
+	{preffered,[{"c100","host1"}]}},
        {{"mydivi","1.0.0"},
 	"mydivi","1.0.0",
 	[{mydivi,"1.0.0"},{sd,"1.0.0"}],
@@ -87,19 +86,19 @@ pods_info_all()->
        {{"mydivi_c200","1.0.0"},
 	"mydivi_c200","1.0.0",
 	[{mydivi,"1.0.0"},{sd,"1.0.0"}],
-	{preffered,[{"c200","host"}]}},
+	{preffered,[{"c100","host1"}]}},
        {{"mydivi_c201","1.0.0"},
 	"mydivi_c201","1.0.0",
 	[{mydivi,"1.0.0"},{sd,"1.0.0"}],
-	{preffered,[{"c201","host"}]}},
+	{preffered,[{"c100","host2"}]}},
        {{"mydivi_c202","1.0.0"},
 	"mydivi_c202","1.0.0",
 	[{mydivi,"1.0.0"},{sd,"1.0.0"}],
-	{preffered,[{"c202","host"}]}},
+	{preffered,[{"c100","host3"}]}},
        {{"mydivi_c203","1.0.0"},
 	"mydivi_c203","1.0.0",
 	[{mydivi,"1.0.0"},{sd,"1.0.0"}],
-	{preffered,[{"c203","host"}]}},
+	{preffered,[{"c100","host4"}]}},
        {{"sd","1.0.0"},
 	"sd","1.0.0",
 	[{sd,"1.0.0"}],
@@ -110,5 +109,5 @@ pods_info_all()->
 	 {myadd,"1.0.0"},
 	 {mydivi,"1.0.0"},
 	 {sd,"1.0.0"}],
-	{preferred,[{"c202","host"}]}}],
+	{preferred,[{"c100","host3"}]}}],
     lists:keysort(1,A).

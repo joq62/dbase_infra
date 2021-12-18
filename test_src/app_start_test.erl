@@ -9,7 +9,9 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include_lib("eunit/include/eunit.hrl").
+
+
+
 -include("controller.hrl").
 %% --------------------------------------------------------------------
 
@@ -28,21 +30,19 @@
 %% Returns: non
 %% --------------------------------------------------------------------
 start()->
-    ?debugMsg("Start setup"),
-    ?assertEqual(ok,setup()),
-    ?debugMsg("stop setup"),
-
- %   ?debugMsg("Start testXXX"),
- %   ?assertEqual(ok,single_node()),
- %   ?debugMsg("stop single_node"),
-    
+    io:format("~p~n",[{"Start setup",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=setup(),
+    io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   
       %% End application tests
-    ?debugMsg("Start cleanup"),
-    ?assertEqual(ok,cleanup()),
-    ?debugMsg("Stop cleanup"),
-
-    ?debugMsg("------>"++atom_to_list(?MODULE)++" ENDED SUCCESSFUL ---------"),
+    io:format("~p~n",[{"Start cleanup",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=cleanup(),
+    io:format("~p~n",[{"Stop cleaup",?MODULE,?FUNCTION_NAME,?LINE}]),
+    
+    io:format("------>"++atom_to_list(?MODULE)++" ENDED SUCCESSFUL ---------"),
     ok.
+
+
 
 
 %% --------------------------------------------------------------------
@@ -52,24 +52,7 @@ start()->
 %% --------------------------------------------------------------------
 
 setup()->
-    {TestDir,TestPath}=?TestConfig,
-    {Dir,Path}=?Config,
-    os:cmd("rm -rf "++TestDir),
-    os:cmd("rm -rf "++Dir),
-    os:cmd("git clone "++TestPath),
-    os:cmd("git clone "++Path),
-
-    %%--- Mnesia start
-    application:start(dbase_infra),
-    DbaseSpecs=dbase_infra:get_dbase_specs(),
-    [{db_host,ok},
-     {db_service_catalog,ok},
-     {db_deployment,ok},
-     {db_pods,ok},
-     {db_deploy_state,ok},
-     {db_logger,ok}]=[{Module,dbase_infra:load_from_file(Module,Dir,Directive)}||{Module,Dir,Directive}<-DbaseSpecs],
-
-   
+ 
     ok.
 
 

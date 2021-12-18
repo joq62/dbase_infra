@@ -56,7 +56,9 @@ schedule()->
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
 init([]) ->
-    dbase:dynamic_db_init([]),
+    DbaseNodes=lists:delete(node(),sd:get(dbase_infra)),
+    io:format("DbaseNodes ~p~n",[{DbaseNodes,node(),?MODULE,?FUNCTION_NAME,?LINE}]),
+    dbase:dynamic_db_init(DbaseNodes),
     {ok, #state{}}.
 
 %% --------------------------------------------------------------------

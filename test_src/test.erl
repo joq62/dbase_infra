@@ -9,7 +9,6 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include_lib("kernel/include/logger.hrl").
 %% --------------------------------------------------------------------
 
 %% External exports
@@ -29,7 +28,7 @@
 start()->
   %  io:format("~p~n",[{"Start setup",?MODULE,?FUNCTION_NAME,?LINE}]),
     ok=setup(),
-  %  io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
+    io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
 
   %  io:format("~p~n",[{"Start db_host_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
     ok=db_host_test:start(),
@@ -55,9 +54,9 @@ start()->
     ok=db_logger_test:start(),
     io:format("~p~n",[{"Stop db_logger_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
- %  io:format("~p~n",[{"Start dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
-%    ok=dbase_test(),
-%    io:format("~p~n",[{"Stop dbase_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %  io:format("~p~n",[{"Start distributed_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=distributed_test:start(),
+    io:format("~p~n",[{"Stop distributed_test()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
   %  io:format("~p~n",[{"Start monkey()",?MODULE,?FUNCTION_NAME,?LINE}]),
   %  ok=monkey(),
@@ -82,8 +81,11 @@ start()->
 %% --------------------------------------------------------------------
 
 setup()->
- 
-   ok.
+    dbase_data:load_configs(),
+    ok=application:start(sd),
+    ok=application:start(dbase_infra),
+    io:format("app ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok.
 
 
 %% --------------------------------------------------------------------
