@@ -94,14 +94,19 @@ cluster_start()->
     timer:sleep(1000),
     io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
+ io:format("N1,mnesia:system_info(tables)~p~n",[{rpc:call(N1,mnesia,system_info,[tables],5*1000),
+					   ?MODULE,?FUNCTION_NAME,?LINE}]),
 
+    
 
     % Start second node
     ok=rpc:call(N2,application,start,[dbase_infra],5*1000),
     timer:sleep(1000),
+    io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
+					   ?MODULE,?FUNCTION_NAME,?LINE}]),
     io:format("N2,mnesia:system_info()~p~n",[{rpc:call(N2,mnesia,system_info,[],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
-
+   
     gl=N2,
   % Start third node
     ok=rpc:call(N3,application,start,[sd],5*1000),

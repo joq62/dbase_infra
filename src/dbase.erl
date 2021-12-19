@@ -38,15 +38,18 @@ dynamic_db_init([])->
     ok;
 
 dynamic_db_init([DbaseNode|T])->
-    mnesia:stop(),
+ mnesia:stop(),
     mnesia:del_table_copy(schema,node()),
     mnesia:delete_schema([node()]),
+     mnesia:start(),
     io:format("DbaseNode ~p~n",[{DbaseNode,node(),?FUNCTION_NAME,?MODULE,?LINE}]),
     StorageType=ram_copies,
-    case rpc:call(DbaseNode,mnesia,change_config,[extra_db_nodes, [node()]],5000) of
-	{ok,[Added]}->
-	    mnesia:add_table_copy(schema, Added,StorageType),
+  %  case rpc:call(DbaseNode,mnesia,change_config,[extra_db_nodes, [node()]],5000) of
+    case rpc:call(node(),mnesia,change_config,[extra_db_nodes,[DbaseNode]],5000) of
+	{ok,[AddedNode]}->
 	    Tables=mnesia:system_info(tables),
+	    TableRes=[{mnesia:add_table_copy(Table, node(),StorageType),Table}||Table<-Tables,
+		     Table/=schema],
 	    mnesia:wait_for_tables(Tables,20*1000);
 	Reason ->
 	    io:format("Error~p~n",[{error,Reason,DbaseNode,node(),?FUNCTION_NAME,?MODULE,?LINE}]),
