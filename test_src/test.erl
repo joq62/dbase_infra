@@ -84,6 +84,7 @@ setup()->
     dbase_data:load_configs(),
     ok=application:start(sd),
     ok=application:start(dbase_infra),
+    dbase_infra:init_dynamic(),
     io:format("app ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE}]),
     ok.
 

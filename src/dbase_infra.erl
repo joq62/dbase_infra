@@ -13,6 +13,7 @@
 -export([
 	 get_dbase_specs/0,
 	 load_from_file/3,
+	 init_dynamic/0,
 	 add_dynamic/1,
 	 dynamic_load_table/2,
 	 boot/0
@@ -64,6 +65,8 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 load_from_file(Module,Dir,Directive)->
     gen_server:call(?SERVER, {load_from_file,Module,Dir,Directive},infinity).
 
+init_dynamic()->
+    gen_server:call(?SERVER, {init_dynamic},infinity).
 add_dynamic(Node)->
     gen_server:call(?SERVER, {add_dynamic,Node},infinity).
 dynamic_load_table(Node,Module)->

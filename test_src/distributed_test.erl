@@ -90,30 +90,32 @@ cluster_start()->
     N1=rpc:call(N1,bully,who_is_leader,[],5*1000),
 
     % Start first node
+
     ok=rpc:call(N1,application,start,[dbase_infra],5*1000),
+    ok=rpc:call(N1,dbase_infra,init_dynamic,[],5*1000),
     timer:sleep(1000),
+    
     io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
  io:format("N1,mnesia:system_info(tables)~p~n",[{rpc:call(N1,mnesia,system_info,[tables],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
 
-    
 
     % Start second node
     ok=rpc:call(N2,application,start,[dbase_infra],5*1000),
+    
+    ok=rpc:call(N1,dbase_infra,add_dynamic,[N2],5*1000),
     timer:sleep(1000),
     io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
     io:format("N2,mnesia:system_info()~p~n",[{rpc:call(N2,mnesia,system_info,[],5*1000),
 					   ?MODULE,?FUNCTION_NAME,?LINE}]),
    
-    gl=N2,
+    
   % Start third node
-    ok=rpc:call(N3,application,start,[sd],5*1000),
- %   io:format("N3 get_nodes()~p~n",[{rpc:call(N3,lib_bully,get_nodes,[],1000),
-%				     ?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=rpc:call(N3,application,start,[bully],5*1000),
-    timer:sleep(1000),
+
+    ok=rpc:call(N3,application,start,[dbase_infra],5*1000),
+    ok=rpc:call(N1,dbase_infra,add_dynamic,[N3],5*1000),
     io:format("N1,N2,N3 get_nodes()~p~n",[{lib_bully:get_nodes(),
 					?MODULE,?FUNCTION_NAME,?LINE}]),
     io:format("N1 leader ~p~n",[{rpc:call(N1,bully,who_is_leader,[],5*1000),
@@ -122,7 +124,11 @@ cluster_start()->
     N1=rpc:call(N2,bully,who_is_leader,[],5*1000),
     N1=rpc:call(N3,bully,who_is_leader,[],5*1000),
 
-    nok.   
+    io:format("N2,mnesia:system_info()~p~n",[{rpc:call(N2,mnesia,system_info,[],5*1000),
+					   ?MODULE,?FUNCTION_NAME,?LINE}]),
+    
+    
+    ok.   
 
 
 %% --------------------------------------------------------------------
@@ -193,51 +199,6 @@ add_node()->
     host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
     host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
     ok.
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-x()->    
-    [[{atomic,ok},{atomic,ok},{atomic,ok}],
-     [{atomic,ok},{atomic,ok},{atomic,ok}],
-     [{atomic,ok},{atomic,ok},{atomic,ok}]].
-
-
-
-
-
-    
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-
-    
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
 
 
 %% --------------------------------------------------------------------

@@ -56,9 +56,9 @@ schedule()->
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
 init([]) ->
-    DbaseNodes=lists:delete(node(),sd:get(dbase_infra)),
-    io:format("DbaseNodes ~p~n",[{DbaseNodes,node(),?MODULE,?FUNCTION_NAME,?LINE}]),
-    dbase:dynamic_db_init(DbaseNodes),
+   % DbaseNodes=lists:delete(node(),sd:get(dbase_infra)),
+   % io:format("DbaseNodes ~p~n",[{DbaseNodes,node(),?MODULE,?FUNCTION_NAME,?LINE}]),
+  %  dbase:dynamic_db_init(DbaseNodes),
     {ok, #state{}}.
 
 %% --------------------------------------------------------------------
@@ -82,14 +82,20 @@ handle_call({load_from_file,Module,Dir,yes},_From, State) ->
 		  ErrorList
 	  end,
     {reply, Reply, State};
+
 handle_call({load_from_file,Module,na,no},_From, State) ->
     Reply=rpc:call(node(),Module,create_table,[],5*1000),
     {reply, Reply, State};
 
 
+handle_call({init_dynamic},_From, State) ->
+    Reply=rpc:call(node(),dbase,dynamic_db_init,[[]],3*1000),
+    {reply, Reply, State};
+
 handle_call({add_dynamic,Node},_From, State) ->
     Reply=rpc:call(Node,dbase,dynamic_db_init,[[node()]],3*1000),
     {reply, Reply, State};
+
 handle_call({dynamic_load_table,Node,Module},_From, State) ->
     Reply=rpc:call(Node,dbase,dynamic_load_table,[Module],5*1000),
     {reply, Reply, State};
