@@ -185,7 +185,7 @@ add_pod_status(Object,PodInfo)->
 		 [S1]->
 		     %
 		     {PodNode,_PodDir,_PodId}=PodInfo,		     
-		     NewPods=[PodInfo|lists:keydelete(PodNode,1,S1#?RECORD.pods,PodInfo)],
+		     NewPods=[PodInfo|lists:keydelete(PodNode,1,S1#?RECORD.pods)],
 		     NewRecord=S1#?RECORD{pods=NewPods},
 		     mnesia:delete_object(S1),
 		     mnesia:write(NewRecord)
@@ -203,7 +203,7 @@ delete_pod_status(Object,PodInfo)->
 		 [S1]->
 		     %
 		     {PodNode,_PodDir,_PodId}=PodInfo,		     
-		     NewPods=lists:keydelete(PodNode,1,S1#?RECORD.pods,PodInfo),
+		     NewPods=lists:keydelete(PodNode,1,S1#?RECORD.pods),
 		     NewRecord=S1#?RECORD{pods=NewPods},
 		     mnesia:delete_object(S1),
 		     mnesia:write(NewRecord)
