@@ -14,6 +14,7 @@
 	 start_args,
 	 dirs_to_keep,
 	 application_dir,
+	 capabilities,
 	 status
 	}).
 
@@ -110,7 +111,7 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
+create({Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
@@ -120,6 +121,7 @@ create({Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}) ->
 				start_args=StartArgs,
 				dirs_to_keep=DirsToKeep,
 				application_dir=AppDir,
+				capabilities=Capabilities,
 				status=Status
 			       },		
 		mnesia:write(Record) end,
@@ -173,8 +175,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
-		       {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z]
+		   [{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}||
+		       {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}<-Z]
 	   end,
     Result.
 
@@ -200,8 +202,8 @@ read(Object) ->
 	       []->
 		   {error,[eexists, Object]};
 	       _->
-		   [R]=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}||
-			   {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}<-Z],
+		   [R]=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}||
+			   {?RECORD,Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -268,8 +270,9 @@ data([HostFile|T],Acc)->
     Type=proplists:get_value(host_type,I),
     DirsToKeep=proplists:get_value(dirs_to_keep,I),
     AppDir=proplists:get_value(application_dir,I),
+    Capabilities=proplists:get_value(capabilities,I),
     Status=stopped,
    % io:format("~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
-    NewAcc=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}|Acc],
+    NewAcc=[{Id,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Capabilities,Status}|Acc],
     data(T,NewAcc).
 
