@@ -40,6 +40,10 @@ start()->
     {"mydivi_c201","1.0.0"},
     {"mydivi_c202","1.0.0"},
     {"mydivi_c203","1.0.0"}]=db_deployment:pod_specs({"divi_multi","1.0.0"}),
+
+    []=db_deployment:affinity({"add_1","1.0.0"}),
+    [{"c100","host1"}]=db_deployment:affinity({"math_1","1.0.0"}),
+    
     
     
   ok. 
@@ -61,22 +65,23 @@ deployment_info_all()->
     A=[{{"add_1","1.0.0"},
 	"add_1","1.0.0",
 	[{"myadd","1.0.0"}],
-	stopped},
+	[],stopped},
        {{"divi_1","1.0.0"},
 	"divi_1","1.0.0",
 	[{"mydivi","1.0.0"}],
-	stopped},
+	[],stopped},
        {{"divi_multi","1.0.0"},
 	"divi_multi","1.0.0",
 	[{"mydivi_c200","1.0.0"},
 	 {"mydivi_c201","1.0.0"},
 	 {"mydivi_c202","1.0.0"},
 	 {"mydivi_c203","1.0.0"}],
-	stopped}, 
+	[],stopped},
        {{"math_1","1.0.0"},
 	"math_1","1.0.0",
 	[{"single_mymath","1.0.0"},
 	 {"mydivi","1.0.0"},
 	 {"myadd","1.0.0"}],
+	[{"c100","host1"}],
 	stopped}],
     lists:keysort(1,A).

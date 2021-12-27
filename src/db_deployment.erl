@@ -14,6 +14,7 @@
 	 name,
 	 vsn,
 	 pod_specs,
+	 affinity,
 	 status
 	}).
 
@@ -33,7 +34,9 @@ vsn(Id)->
 pod_specs(Id)->
     Record=read_record(Id),
     Record#?RECORD.pod_specs.
-
+affinity(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.affinity.    
     
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
@@ -42,7 +45,7 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,Name,Vsn,PodSpecs,Status}) ->
+create({Id,Name,Vsn,PodSpecs,Affinity,Status}) ->
 %   io:format("create ~p~n",[{HostName,AccessInfo,Type,StartArgs,DirsToKeep,AppDir,Status}]),
     F = fun() ->
 		Record=#?RECORD{
@@ -50,6 +53,7 @@ create({Id,Name,Vsn,PodSpecs,Status}) ->
 				name=Name,
 				vsn=Vsn,
 				pod_specs=PodSpecs,
+				affinity=Affinity,
 				status=Status
 			       },		
 		mnesia:write(Record) end,
@@ -103,8 +107,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Id,Name,Vsn,PodSpecs,Status}||
-		       {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z]
+		   [{Id,Name,Vsn,PodSpecs,Affinity,Status}||
+		       {?RECORD,Id,Name,Vsn,PodSpecs,Affinity,Status}<-Z]
 	   end,
     Result.
 
@@ -126,8 +130,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{Id,Name,Vsn,PodSpecs,Status}||
-			   {?RECORD,Id,Name,Vsn,PodSpecs,Status}<-Z],
+		   [R]=[{Id,Name,Vsn,PodSpecs,Affinity,Status}||
+			   {?RECORD,Id,Name,Vsn,PodSpecs,Affinity,Status}<-Z],
 		   R
 	   end,
     Result.
@@ -181,7 +185,8 @@ data([File|T],Acc)->
     Vsn=proplists:get_value(vsn,I),
     Id={Name,Vsn},
     PodSpecs=proplists:get_value(pod_specs,I),
+    Affinity=proplists:get_value(affinity,I),
     Status=stopped,
 %    io:format("~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,Id,Name,Vsn,PodSpecs,Status}]),
-    NewAcc=[{Id,Name,Vsn,PodSpecs,Status}|Acc],
+    NewAcc=[{Id,Name,Vsn,PodSpecs,Affinity,Status}|Acc],
     data(T,NewAcc).
