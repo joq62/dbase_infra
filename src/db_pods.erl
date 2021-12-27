@@ -14,7 +14,7 @@
 	 name,
 	 vsn,
 	 application,
-	 host
+	 needs
 
 	}).
 
@@ -42,9 +42,9 @@ application(Id)->
     Record=read_record(Id),
     Record#?RECORD.application.
 
-host(Id)->
+needs(Id)->
     Record=read_record(Id),
-    Record#?RECORD.host.
+    Record#?RECORD.needs.
 
     
 %%------------------------- Generic  dbase commands ----------------------
@@ -54,14 +54,14 @@ create_table()->
 delete_table_copy(Dest)->
     mnesia:del_table_copy(?TABLE,Dest).
 
-create({Id,Name,Vsn,Application,Host}) ->
+create({Id,Name,Vsn,Application,Needs}) ->
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,
 				name=Name,
 				vsn=Vsn,
 				application=Application,
-				host=Host
+				needs=Needs
 			       },		
 		mnesia:write(Record) end,
     case mnesia:transaction(F) of
@@ -114,8 +114,8 @@ read_all() ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [{Id,Name,Vsn,Application,Host}||
-		       {?RECORD,Id,Name,Vsn,Application,Host}<-Z]
+		   [{Id,Name,Vsn,Application,Needs}||
+		       {?RECORD,Id,Name,Vsn,Application,Needs}<-Z]
 	   end,
     Result.
 
@@ -137,8 +137,8 @@ read(Object) ->
 	       {aborted,Reason}->
 		   {aborted,Reason};
 	       _->
-		   [R]=[{Id,Name,Vsn,Application,Host}||
-			   {?RECORD,Id,Name,Vsn,Application,Host}<-Z],
+		   [R]=[{Id,Name,Vsn,Application,Needs}||
+			   {?RECORD,Id,Name,Vsn,Application,Needs}<-Z],
 		   R
 	   end,
     Result.
@@ -172,7 +172,7 @@ do(Q) ->
 % {name,"mydivi"}.
 % {vsn,"1.0.0"}.
 % {info,[{mydivi,"1.0.0"}]}.
-% {host,{preffered,["c203"]}}.
+% {needs,{preffered,["c203"]}}.
 
 data_from_file(Dir)->
     {ok,Files}=file:list_dir(Dir),
@@ -193,6 +193,6 @@ data([File|T],Acc)->
     Vsn=proplists:get_value(vsn,I),
     Id={Name,Vsn},
     Application=proplists:get_value(application,I),
-    Host=proplists:get_value(host,I),
-    NewAcc=[{Id,Name,Vsn,Application,Host}|Acc],
+    Needs=proplists:get_value(needs,I),
+    NewAcc=[{Id,Name,Vsn,Application,Needs}|Acc],
     data(T,NewAcc).
