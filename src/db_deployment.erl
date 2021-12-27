@@ -36,7 +36,10 @@ pod_specs(Id)->
     Record#?RECORD.pod_specs.
 affinity(Id)->
     Record=read_record(Id),
-    Record#?RECORD.affinity.    
+    Record#?RECORD.affinity.  
+status(Id)->
+    Record=read_record(Id),
+    Record#?RECORD.status.  
     
 %%------------------------- Generic  dbase commands ----------------------
 create_table()->
@@ -135,7 +138,39 @@ read(Object) ->
 		   R
 	   end,
     Result.
-
+add_pod(Object,AddedPodInfo)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     NewStatus=[AddedPodInfo|lists:delete(AddedPodInfo,S1#?RECORD.status)],
+		     NewRecord=S1#?RECORD{status=NewStatus},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+delete_pod(Object,DelPodInfo)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     NewStatus=lists:delete(DelPodInfo,S1#?RECORD.status),
+		     NewRecord=S1#?RECORD{status=NewStatus},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+    
 delete(Object) ->
     F = fun() -> 
 		RecordList=[X||X<-mnesia:read({?TABLE,Object}),

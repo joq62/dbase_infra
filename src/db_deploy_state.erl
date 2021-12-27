@@ -86,7 +86,7 @@ create(DeploymentId,Pods) ->
 		mnesia:write(Record) end,
     case mnesia:transaction(F) of
 	{atomic,ok}->
-	    ok;
+	    {ok,Id};
 	ErrorReason ->
 	    ErrorReason
     end.
@@ -175,7 +175,7 @@ delete(Object) ->
 		end
 	end,
     mnesia:transaction(F).
-update_status(Object,PodInfo)->
+add_pod_status(Object,PodInfo)->
  F = fun() -> 
 	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
 				       X#?RECORD.id==Object])),
@@ -184,8 +184,26 @@ update_status(Object,PodInfo)->
 		     mnesia:abort(?TABLE);
 		 [S1]->
 		     %
-		     {PodId,_HostId,_Node}=PodInfo,		     
-		     NewPods=lists:keyreplace(PodId,1,S1#?RECORD.pods,PodInfo),
+		     {PodNode,_PodDir,_PodId}=PodInfo,		     
+		     NewPods=[PodInfo|lists:keydelete(PodNode,1,S1#?RECORD.pods,PodInfo)],
+		     NewRecord=S1#?RECORD{pods=NewPods},
+		     mnesia:delete_object(S1),
+		     mnesia:write(NewRecord)
+	     end
+		 
+     end,
+    mnesia:transaction(F).
+delete_pod_status(Object,PodInfo)->
+ F = fun() -> 
+	     RecordList=do(qlc:q([X || X <- mnesia:table(?TABLE),
+				       X#?RECORD.id==Object])),
+	     case RecordList of
+		 []->
+		     mnesia:abort(?TABLE);
+		 [S1]->
+		     %
+		     {PodNode,_PodDir,_PodId}=PodInfo,		     
+		     NewPods=lists:keydelete(PodNode,1,S1#?RECORD.pods,PodInfo),
 		     NewRecord=S1#?RECORD{pods=NewPods},
 		     mnesia:delete_object(S1),
 		     mnesia:write(NewRecord)
