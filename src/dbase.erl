@@ -9,7 +9,7 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
-
+-include("controller.hrl").
 %%---------------------------------------------------------------------
 %% Records for test
 %%
@@ -21,6 +21,32 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+load_configs()->
+    {TestDir,TestPath}=?TestConfig,
+    {Dir,Path}=?Config,
+    os:cmd("rm -rf "++TestDir),
+    os:cmd("rm -rf "++Dir),
+    os:cmd("git clone "++TestPath),
+    os:cmd("git clone "++Path),
+    ok.
+
+load_configs(Root)->
+    {TestDir,TestPath}=?TestConfig,
+    {ProductionDir,Path}=?Config,
+    TDir=filename:join(Root,TestDir),
+    PDir=filename:join(Root,ProductionDir),
+    os:cmd("rm -rf "++TDir),
+    os:cmd("rm -rf "++PDir),
+    os:cmd("git clone "++TestPath),
+    os:cmd("mv "++TestDir++" "++Root),
+    os:cmd("git clone "++Path),
+    os:cmd("mv "++ProductionDir++" "++Root),
+    ok.
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
