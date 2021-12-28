@@ -32,13 +32,13 @@ start()->
   %  io:format("~p~n",[{"Stop setup",?MODULE,?FUNCTION_NAME,?LINE}]),
 
 %    io:format("~p~n",[{"Start cluster_start()()",?MODULE,?FUNCTION_NAME,?LINE}]),
-%    ok=cluster_start(),
-%    io:format("~p~n",[{"Stop cluster_start()",?MODULE,?FUNCTION_NAME,?LINE}]),
+    ok=cluster_start(),
+    io:format("~p~n",[{"Stop cluster_start()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
 
-    io:format("~p~n",[{"Start initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
-    ok=initial(),
-    io:format("~p~n",[{"Stop initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
+%    io:format("~p~n",[{"Start initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
+ %   ok=initial(),
+ %   io:format("~p~n",[{"Stop initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
  %   io:format("~p~n",[{"Start add_node()",?MODULE,?FUNCTION_NAME,?LINE}]),
 %    ok=add_node(),
@@ -139,29 +139,15 @@ cluster_start()->
 -define(ConfigDir,"test_configurations/host_configuration").
 
 initial()->
-    [ok,ok,ok]=[rpc:call(N,application,start,[sd],5*1000)||N<-get_nodes()],
-    [N1,N2,N3]=get_nodes(),
-    %% intial node
-    ok=rpc:call(N1,application,start,[dbase_infra],5*1000),
-    [io:format("N1 ~p~n",[{Node,rpc:call(Node,mnesia,system_info,[tables],2*1000)}])||Node<-get_nodes()],
-
-    ok=rpc:call(N2,application,start,[dbase_infra],5*1000),
-    [io:format("N2 ~p~n",[{Node,rpc:call(Node,mnesia,system_info,[tables],2*1000)}])||Node<-get_nodes()],
-
-    ok=rpc:call(N3,application,start,[dbase_infra],5*1000),
-    [io:format("N3 ~p~n",[{Node,rpc:call(Node,mnesia,system_info,[tables],2*1000)}])||Node<-get_nodes()],
-
-    [io:format("service_catalog ~p~n",[{Node,rpc:call(Node,db_service_catalog,read_all,[],2*1000)}])||Node<-get_nodes()],
-    
-  %  [ok,ok,ok]=[rpc:call(Node,application,start,[dbase_infra],5*1000)||Node<-get_nodes()],
+    [ok,ok,ok]=[rpc:call(Node,application,start,[dbase_infra],5*1000)||Node<-get_nodes()],
  %   [io:format("~p~n",[{Node,rpc:call(Node,mnesia,system_info,[],2*1000)}])||Node<-get_nodes()],
     %%----- load initial node
-%    [Node0|_]=get_nodes(),
- %   [{atomic,ok},{atomic,ok},{atomic,ok}]=rpc:call(Node0,dbase_infra,load_from_file,[db_host,?ConfigDir],5*1000),
+    [Node0|_]=get_nodes(),
+    [{atomic,ok},{atomic,ok},{atomic,ok}]=rpc:call(Node0,dbase_infra,load_from_file,[db_host,?ConfigDir],5*1000),
     
- %   [{host0@c100,host1@c100},
-  %   {host1@c100,{badrpc,_}},
-  %   {host2@c100,{badrpc,_}}]=[{Node,rpc:call(Node,db_host,node,[{"c100","host1"}],5*1000)}||Node<-get_nodes()],
+    [{host0@c100,host1@c100},
+     {host1@c100,{badrpc,_}},
+     {host2@c100,{badrpc,_}}]=[{Node,rpc:call(Node,db_host,node,[{"c100","host1"}],5*1000)}||Node<-get_nodes()],
     
     ok.
 

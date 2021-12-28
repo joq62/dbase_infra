@@ -19,6 +19,7 @@
 	 load_from_file/3,
 
 	 load_configs/0,
+	 delete_configs/0,
 	 load_configs/1,
 	 connect/0,
 	 start_needed_apps/0,
@@ -62,6 +63,14 @@ load_configs()->
     os:cmd("git clone "++TestPath),
     os:cmd("git clone "++Path),
     ok.
+
+delete_configs()->
+    {TestDir,TestPath}=?TestConfig,
+    {Dir,Path}=?Config,
+    os:cmd("rm -rf "++TestDir),
+    os:cmd("rm -rf "++Dir),
+    ok.
+    
 
 load_configs(Root)->
     {TestDir,TestPath}=?TestConfig,

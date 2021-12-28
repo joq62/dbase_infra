@@ -56,11 +56,11 @@ schedule()->
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
 init([]) ->
-    case sd:get(dbase_infra) of
+    case lists:delete(node(),sd:get(dbase_infra)) of
 	[]-> % first node
-	    dbase:load_configs(),
+	    dbase_data:load_configs(),
 	    ok=dbase:dynamic_db_init([]),
-	    dbase:delete_configs();
+	    dbase_data:delete_configs();
 	DbaseNodes->
 	    ok=dbase:dynamic_db_init(DbaseNodes)
     end,
