@@ -33,7 +33,7 @@ start()->
     AllInfo=lists:keysort(1,db_deploy_state:read_all()),
     
     Pods1=[{Id,"c100",node()}||Id<-db_deployment:pod_specs({"divi_multi","1.0.0"})],
-    ok=db_deploy_state:create({"divi_multi","1.0.0"},Pods1),
+    {ok,_}=db_deploy_state:create({"divi_multi","1.0.0"},Pods1),
     [{Id1,
       {"divi_multi","1.0.0"},
       [{{"mydivi_c200","1.0.0"},"c100",test@c100},
@@ -42,7 +42,7 @@ start()->
        {{"mydivi_c203","1.0.0"},"c100",test@c100}]}]=db_deploy_state:read_all(),
     
     Pods2=[{Id,"c203",node()}||Id<-db_deployment:pod_specs({"add_1","1.0.0"})],
-    ok=db_deploy_state:create({"add_1","1.0.0"},Pods2),
+    {ok,_}=db_deploy_state:create({"add_1","1.0.0"},Pods2),
 
     [{Id1,
       {"divi_multi","1.0.0"},
@@ -71,13 +71,13 @@ start()->
     
     {error,[eexist,{"myadd","1.0.0"}]}=db_deploy_state:pod_node(Id1,{"myadd","1.0.0"}),
     test@c100=db_deploy_state:pod_node(Id2,{"myadd","1.0.0"}),
-    {atomic,ok}==db_deploy_state:update_status(Id1,{{"mydivi_c202","1.0.0"},"c201",host2@c201}),
+    {atomic,ok}=db_deploy_state:add_pod_status(Id1,{{"mydivi_c202","1.0.0"},"c201",host2@c201}),
     
     [{Id1,
       {"divi_multi","1.0.0"},
-      [{{"mydivi_c200","1.0.0"},"c100",test@c100},
+      [{{"mydivi_c202","1.0.0"},"c201",host2@c201},
+       {{"mydivi_c200","1.0.0"},"c100",test@c100},
        {{"mydivi_c201","1.0.0"},"c100",test@c100},
-       {{"mydivi_c202","1.0.0"},"c201",host2@c201},
        {{"mydivi_c203","1.0.0"},"c100",test@c100}]}]=db_deploy_state:deployment({"divi_multi","1.0.0"}),
     
     

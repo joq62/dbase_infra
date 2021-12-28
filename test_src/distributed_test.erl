@@ -233,6 +233,8 @@ setup()->
     C="host2@"++HostId,
     Node2=list_to_atom(C),    
     Nodes=[Node0,Node1,Node2],
+    [rpc:call(N,init,stop,[],5*1000)||N<-Nodes],
+    timer:sleep(2000),
     [{ok,Node0},
      {ok,Node1},
      {ok,Node2}]=[start_slave(NodeName)||NodeName<-["host0","host1","host2"]],

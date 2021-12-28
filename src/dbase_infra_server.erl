@@ -59,10 +59,10 @@ init([]) ->
     case sd:get(dbase_infra) of
 	[]-> % first node
 	    dbase:load_configs(),
-	    dbase:dynamic_db_init([]),
+	    ok=dbase:dynamic_db_init([]),
 	    dbase:delete_configs();
 	DbaseNodes->
-	    dbase:dynamic_db_init(DbaseNodes)
+	    ok=dbase:dynamic_db_init(DbaseNodes)
     end,
     
 	    
@@ -100,11 +100,11 @@ handle_call({load_from_file,Module,na,no},_From, State) ->
 
 
 handle_call({init_dynamic},_From, State) ->
-    Reply=rpc:call(node(),dbase,dynamic_db_init,[[]],3*1000),
+    Reply=rpc:call(node(),dbase,dynamic_db_init,[[]],5*1000),
     {reply, Reply, State};
 
 handle_call({add_dynamic,Node},_From, State) ->
-    Reply=rpc:call(Node,dbase,dynamic_db_init,[[node()]],3*1000),
+    Reply=rpc:call(Node,dbase,dynamic_db_init,[[node()]],5*1000),
     {reply, Reply, State};
 
 handle_call({dynamic_load_table,Node,Module},_From, State) ->

@@ -40,7 +40,7 @@ load_from_file(Module,Dir,yes)->
 	      []->
 		  ok;
 	      ErrorList->
-		  ErrorList
+		  {error,ErrorList}
 	  end,
     Reply;
 load_from_file(Module,na,no)->
