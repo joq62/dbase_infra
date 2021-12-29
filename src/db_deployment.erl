@@ -19,6 +19,9 @@
 	}).
 
 %%------------------------- Application specific commands ----------------
+all_id()->
+     AllRecords=read_all_record(),
+    [I||I<-[X#?RECORD.id||X<-AllRecords]].
 name()->
     AllRecords=read_all_record(),
     [I||I<-[X#?RECORD.name||X<-AllRecords]].
