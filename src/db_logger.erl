@@ -31,6 +31,7 @@ nice_print(Id)->
 	    {error,Reason};
 	Info->
 	    {Id,{Y,M,D},{H,Min,Sec},Node,Severity,Msg,Module,Function,Line,Args,Status}=Info,
+	    
 	    Y1=integer_to_list(Y),
 	    M1=integer_to_list(M),
 	    D1=integer_to_list(D),
@@ -46,9 +47,15 @@ nice_print(Id)->
 	    
 	    DateTime=Y1++"-"++M1++"-"++D1++" "++H1++":"++Min1++":"++S1++" ",
 	    NodeSeverity=Node1++" "++Severity1++" ",
-	    MFL="{"++Module1++","++Function1++","++Line1++"} ",
+	    MFL="{"++Module1++","++Function1++","++Line1++"}",
 	    
-	    io:format("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
+%	    io:format("~0p~n",[{DepInstanceId,PodNode,PodDir,PodId,?MODULE,?FUNCTION_NAME,?LINE}]),
+	  
+	    %io:format("~0p~n",[{DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1}])
+	  %  io:format("~0p~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
+	  %  io:format("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
+	    io:fwrite("~0p~n",[[DateTime,NodeSeverity,Msg,MFL,{Args},Status1]])
+	  %  io:fwrite("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,{Args},Status1])
     end.
 
 
@@ -61,7 +68,7 @@ delete_table_copy(Dest)->
 
 create({Date,Time,Node,Severity,Msg,Module,Function,Line,Args,Status}) ->
     Id=erlang:system_time(microsecond),
-    io:format(" ~p~n",[{Date,Time,Node,Severity,Msg,Module,Function,Line,Args,Status}]),
+%    io:format(" ~p~n",[{Date,Time,Node,Severity,Msg,Module,Function,Line,Args,Status}]),
     F = fun() ->
 		Record=#?RECORD{
 				id=Id,        

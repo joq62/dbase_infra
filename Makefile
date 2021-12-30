@@ -6,10 +6,7 @@ all:
 	rm -rf *_specs *_config *.log;
 #	common
 #	cp ../common/src/*.app ebin;
-	erlc -I include -o ebin ../../common/src/*.erl;
-#	bully
-#	cp ../bully_election/src/*.app ebin;
-#	erlc -o ebin ../bully_election/src/*.erl;
+	erlc -I ../../include -I include -o ebin ../../common/src/*.erl;
 #	app
 	cp src/*.app ebin;
 	erlc -I include -I ../controller/include -o ebin src/*.erl;
@@ -20,19 +17,19 @@ unit_test:
 	mkdir test_ebin;
 #	common
 #	cp ../common/src/*.app ebin;
-	erlc -I include -o ebin ../../common/src/*.erl;
+	erlc -I ../../include -I include -o ebin ../../common/src/*.erl;
 #	sd
 	cp ../sd/src/*.app ebin;
-	erlc -D unit_test -I include -I ../controller/include -o ebin ../sd/src/*.erl;
+	erlc -I ../../include -D unit_test -I include -I ../controller/include -o ebin ../sd/src/*.erl;
 #	bully
 	cp ../bully/src/*.app ebin;
-	erlc -D unit_test -I include -I ../controller/include -o ebin ../bully/src/*.erl;
+	erlc -I ../../include -D unit_test -I include -I ../controller/include -o ebin ../bully/src/*.erl;
 #	app
 	cp src/*.app ebin;
-	erlc -D unit_test -I include -I ../controller/include -o ebin src/*.erl;
+	erlc -D unit_test -I ../../include -I include -I ../controller/include -o ebin src/*.erl;
 #	test application
 	cp test_src/*.app test_ebin;
-	erlc -D debug_flag -I include -I ../controller/include -o test_ebin test_src/*.erl;
+	erlc -D debug_flag -I ../../include -I include -I ../controller/include -o test_ebin test_src/*.erl;
 	erl -pa ebin -pa test_ebin\
 	    -setcookie cookie_test\
 	    -sname test\
