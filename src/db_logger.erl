@@ -25,6 +25,9 @@
 	}).
 
 %%------------------------- Application specific commands ----------------
+ids()->
+    [Id||{Id,_Date,_Time,_Node,_Severity,_Msg,_Module,_Function,_Line,_Args,_Status}<-read_all()].
+    
 nice_print(Id)->
     case read(Id) of
 	{aborted,Reason}->
