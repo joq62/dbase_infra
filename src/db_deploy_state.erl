@@ -181,7 +181,8 @@ add_pod_status(Object,PodInfo)->
 				       X#?RECORD.id==Object])),
 	     case RecordList of
 		 []->
-		     mnesia:abort(?TABLE);
+		     mnesia:abort(?TABLE),
+		     {error,[Object,PodInfo]};
 		 [S1]->
 		     %
 		     {PodNode,_PodDir,_PodId}=PodInfo,		     
