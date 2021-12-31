@@ -1,6 +1,46 @@
 -module(db_host).
 -import(lists, [foreach/2]).
--compile(export_all).
+%-compile(export_all).
+-export([
+	 access_info/0,
+	 access_info/1,
+	 status/0,
+	 status/1,
+	 hosts/0,
+	 ids/0,
+	 hostname/1,
+	 start_args/1,
+	 type/1,
+	 dirs_to_keep/1,
+	 application_dir/1,
+	 ip/1,
+	 port/1,
+	 uid/1,
+	 passwd/1,
+	 node/1,
+	 erl_cmd/1,
+	 env_vars/1,
+	 cookie/1,
+	 nodename/1,
+	 update_status/2	 
+	]).
+
+
+-export([
+	 data_from_file/1,
+	 create_table/0,
+	 delete_table_copy/1,
+	 create/1,
+	 add_table/1,
+	 add_table/2,
+	 add_node/3,
+	 read_all_record/0,
+	 read_all/0,
+	 read_record/1,
+	 read/1,
+	 delete/1	 
+	]).
+
 
 -include_lib("stdlib/include/qlc.hrl").
 
@@ -55,7 +95,7 @@ ids()->
 
 hostname(Id)->
     Record=read_record(Id),
-    {HostName,NodeName}=Record#?RECORD.id,
+    {HostName,_}=Record#?RECORD.id,
     HostName.
 
 start_args(Id)->

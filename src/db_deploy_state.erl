@@ -1,9 +1,34 @@
 -module(db_deploy_state).
 -import(lists, [foreach/2]).
--compile(export_all).
+
+%-compile(export_all).
+
+-export([
+	 deploy_id/0,
+	 deployment_id/1,
+	 deployment/1,
+	 pods/1,
+	 pod_node/2,
+	 add_pod_status/2,
+	 delete_pod_status/2
+	]).
+
+
+-export([
+	 create_table/0,
+	 delete_table_copy/1,
+	 create/2,
+	 add_table/1,
+	 add_table/2,
+	 add_node/3,
+	 read_all_record/0,
+	 read_all/0,
+	 read_record/1,
+	 read/1,
+	 delete/1	 
+	]).
 
 -include_lib("stdlib/include/qlc.hrl").
-
 -define(TABLE,deploy_state).
 -define(RECORD,deploy_state). 
 
