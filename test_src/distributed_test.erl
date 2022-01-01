@@ -40,27 +40,6 @@ start()->
     ok=initial(),
     io:format("~p~n",[{"Stop initial()()",?MODULE,?FUNCTION_NAME,?LINE}]),
 
- %   io:format("~p~n",[{"Start add_node()",?MODULE,?FUNCTION_NAME,?LINE}]),
-%    ok=add_node(),
-%    io:format("~p~n",[{"Stop add_node()",?MODULE,?FUNCTION_NAME,?LINE}]),
-
- %   io:format("~p~n",[{"Start node_status()",?MODULE,?FUNCTION_NAME,?LINE}]),
- %   ok=node_status(),
- %   io:format("~p~n",[{"Stop node_status()",?MODULE,?FUNCTION_NAME,?LINE}]),
-
-%   io:format("~p~n",[{"Start start_args()",?MODULE,?FUNCTION_NAME,?LINE}]),
- %   ok=start_args(),
- %   io:format("~p~n",[{"Stop start_args()",?MODULE,?FUNCTION_NAME,?LINE}]),
-
-%   io:format("~p~n",[{"Start detailed()",?MODULE,?FUNCTION_NAME,?LINE}]),
-%    ok=detailed(),
-%    io:format("~p~n",[{"Stop detailed()",?MODULE,?FUNCTION_NAME,?LINE}]),
-
-%   io:format("~p~n",[{"Start start_stop()",?MODULE,?FUNCTION_NAME,?LINE}]),
- %   ok=start_stop(),
- %   io:format("~p~n",[{"Stop start_stop()",?MODULE,?FUNCTION_NAME,?LINE}]),
-
-
 
  %   
       %% End application tests
@@ -76,68 +55,6 @@ start()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% -------------------------------------------------------------------
-cluster_start()->
-
- %   io:format("get_nodes()~p~n",[{lib_bully:get_nodes(),
-%				 ?MODULE,?FUNCTION_NAME,?LINE}]),
-    Nodes=nodes(),
-    [N1,N2,N3]=Nodes,
-    io:format("N1,N2,N3 ~p~n",[{N1,N2,N3,?MODULE,?FUNCTION_NAME,?LINE}]),
-    %% Start sd and bully on all nodes
-    [ok,ok,ok]=[rpc:call(N,application,start,[sd],5*1000)||N<-Nodes],
-    [ok,ok,ok]=[rpc:call(N,application,start,[bully],5*1000)||N<-Nodes],
-    timer:sleep(1000),    
-    N1=rpc:call(N1,bully,who_is_leader,[],5*1000),
-
-    % Start first node
-
-    ok=rpc:call(N1,application,start,[dbase_infra],5*1000),
-    ok=rpc:call(N1,dbase_infra,init_dynamic,[],5*1000),
-    timer:sleep(1000),
-    
-    io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
-					   ?MODULE,?FUNCTION_NAME,?LINE}]),
- io:format("N1,mnesia:system_info(tables)~p~n",[{rpc:call(N1,mnesia,system_info,[tables],5*1000),
-					   ?MODULE,?FUNCTION_NAME,?LINE}]),
-
-
-    % Start second node
-    ok=rpc:call(N2,application,start,[dbase_infra],5*1000),
-    
-    ok=rpc:call(N1,dbase_infra,add_dynamic,[N2],5*1000),
-    timer:sleep(1000),
-    io:format("N1,mnesia:system_info()~p~n",[{rpc:call(N1,mnesia,system_info,[],5*1000),
-					   ?MODULE,?FUNCTION_NAME,?LINE}]),
-    io:format("N2,mnesia:system_info()~p~n",[{rpc:call(N2,mnesia,system_info,[],5*1000),
-					   ?MODULE,?FUNCTION_NAME,?LINE}]),
-   
-    
-  % Start third node
-
-    ok=rpc:call(N3,application,start,[dbase_infra],5*1000),
-    ok=rpc:call(N1,dbase_infra,add_dynamic,[N3],5*1000),
-    io:format("N1,N2,N3 get_nodes()~p~n",[{lib_bully:get_nodes(),
-					?MODULE,?FUNCTION_NAME,?LINE}]),
-    io:format("N1 leader ~p~n",[{rpc:call(N1,bully,who_is_leader,[],5*1000),
-				 ?MODULE,?FUNCTION_NAME,?LINE}]),
-    N1=rpc:call(N1,bully,who_is_leader,[],5*1000),
-    N1=rpc:call(N2,bully,who_is_leader,[],5*1000),
-    N1=rpc:call(N3,bully,who_is_leader,[],5*1000),
-
-    io:format("N2,mnesia:system_info()~p~n",[{rpc:call(N2,mnesia,system_info,[],5*1000),
-					   ?MODULE,?FUNCTION_NAME,?LINE}]),
-    
-    
-    ok.   
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% -------------------------------------------------------------------
--define(ConfigDir,"test_configurations/host_configuration").
-
 initial()->
     [ok,ok,ok]=[rpc:call(N,application,start,[sd],5*1000)||N<-get_nodes()],
     [N1,N2,N3]=get_nodes(),
@@ -164,56 +81,6 @@ initial()->
   %   {host2@c100,{badrpc,_}}]=[{Node,rpc:call(Node,db_host,node,[{"c100","host1"}],5*1000)}||Node<-get_nodes()],
     
     ok.
-
-   
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-add_node()->
-    [Node0,Node1,Node2]=get_nodes(),
-    {badrpc,_}=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    {badrpc,_}=rpc:call(Node2,db_host,node,[{"c100","host1"}]),
-    
-    ok=rpc:call(Node1,dbase_infra,add_dynamic,[Node0],3*1000),
-    timer:sleep(500),
-    ok=rpc:call(Node1,dbase,dynamic_load_table,[db_host],3*1000),
-    timer:sleep(500),
-    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    {badrpc,_}=rpc:call(Node2,db_host,node,[{"c100","host1"}]),
-
-    ok=rpc:call(Node2,dbase_infra,add_dynamic,[Node0],3*1000),
-    timer:sleep(500),
-    ok=rpc:call(Node2,dbase,dynamic_load_table,[db_host],3*1000),
-    timer:sleep(500),
-    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
-    
-    %---------- stop and restart node
-    slave:stop(Node0),
-    {badrpc,_}=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
-    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
-    %% restart node
-  
-    {ok,Node0}=start_slave("host0"),
-    {badrpc,_}=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
-    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
-
-    %% Start dbase_infra
-    ok=rpc:call(Node0,application,start,[dbase_infra],5*1000),
-   ok=rpc:call(Node0,dbase_infra,add_dynamic,[Node1],3*1000),
-    timer:sleep(500),
-    ok=rpc:call(Node0,dbase,dynamic_load_table,[db_host],3*1000),
-    timer:sleep(500),
-
-    host1@c100=rpc:call(Node0,db_host,node,[{"c100","host1"}]),
-    host1@c100=rpc:call(Node1,db_host,node,[{"c100","host1"}]),
-    host2@c100=rpc:call(Node2,db_host,node,[{"c100","host2"}]),
-    ok.
-
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -277,58 +144,3 @@ cleanup()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-
-access_info_all()->
-    
-    A=[{{"c100","host0"},
-	[{hostname,"c100"},
-	 {ip,"192.168.0.100"},
-	 {ssh_port,22},
-	 {uid,"joq62"},
-	 {pwd,"festum01"},
-	 {node,host0@c100}],
-	auto_erl_controller,
-	[{erl_cmd,"/lib/erlang/bin/erl -detached"},
-	 {cookie,"cookie"},
-	 {env_vars,
-	  [{kublet,[{mode,controller}]},
-	   {dbase_infra,[{nodes,[host1@c100,host2@c100]}]},
-	   {bully,[{nodes,[host1@c100,host2@c100]}]}]},
-	 {nodename,"host0"}],
-	["logs"],
-	"applications",stopped},
-       {{"c100","host1"},
-	[{hostname,"c100"},
-	 {ip,"192.168.0.100"},
-	 {ssh_port,22},
-	 {uid,"joq62"},
-	 {pwd,"festum01"},
-	 {node,host1@c100}],
-	auto_erl_controller,
-	[{erl_cmd,"/lib/erlang/bin/erl -detached"},
-	 {cookie,"cookie"},
-	 {env_vars,
-	  [{kublet,[{mode,controller}]},
-	   {dbase_infra,[{nodes,[host0@c100,host2@c100]}]},
-	   {bully,[{nodes,[host0@c100,host2@c100]}]}]},
-	 {nodename,"host1"}],
-	["logs"],
-	"applications",stopped},
-       {{"c100","host2"},
-	[{hostname,"c100"},
-	 {ip,"192.168.0.100"},
-	 {ssh_port,22},
-	 {uid,"joq62"},
-	 {pwd,"festum01"},
-	 {node,host2@c100}],
-	auto_erl_controller,
-	[{erl_cmd,"/lib/erlang/bin/erl -detached"},
-	 {cookie,"cookie"},
-	 {env_vars,
-	  [{kublet,[{mode,controller}]},
-	   {dbase_infra,[{nodes,[host0@c100,host1@c100]}]},
-	   {bully,[{nodes,[host0@c100,host1@c100]}]}]},
-	 {nodename,"host2"}],
-	["logs"],
-	"applications",stopped}],
-    lists:keysort(1,A).

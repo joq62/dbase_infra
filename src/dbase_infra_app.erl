@@ -56,7 +56,7 @@
 %%          {error, Reason}
 %% --------------------------------------------------------------------
 start(_Type, _StartArgs) ->
-  %  ok=init(),
+    ok=init(),
     {ok,Pid}= dbase_infra_sup:start_link(),
     {ok,Pid}.
    

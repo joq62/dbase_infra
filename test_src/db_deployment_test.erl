@@ -3,13 +3,12 @@
 %%% Description :  1
 %%% 
 %%% Created : 10 dec 2012
-%%% -------------------------------------------------------------------
+%%% -------------------------------------------1------------------------
 -module(db_deployment_test).   
     
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include_lib("kernel/include/logger.hrl").
 -include("controller.hrl").
 %% --------------------------------------------------------------------
 
@@ -31,7 +30,8 @@ start()->
    % init 
     AllInfo=deployment_info_all(),
     AllInfo=lists:keysort(1,db_deployment:read_all()),
-    ["add_1","divi_1","divi_multi","infra_1","math_1"]=lists:sort(db_deployment:name()),
+    ["add_1","controller1","controller2","controller3","divi_1",
+     "divi_multi","math_1","worker1"]=lists:sort(db_deployment:name()),
     
     "add_1"=db_deployment:name({"add_1","1.0.0"}),
     "1.0.0"=db_deployment:vsn({"add_1","1.0.0"}),
@@ -66,6 +66,21 @@ deployment_info_all()->
 	"add_1","1.0.0",
 	[{"myadd","1.0.0"}],
 	[],stopped},
+       {{"controller1","1.0.0"},
+	"controller1","1.0.0",
+	[{"controller","1.0.0"}],
+	[{"c100","host1"}],
+	stopped},
+       {{"controller2","1.0.0"},
+	"controller2","1.0.0",
+	[{"controller","1.0.0"}],
+	[{"c100","host2"}],
+	stopped},
+       {{"controller3","1.0.0"},
+	"controller3","1.0.0",
+	[{"controller","1.0.0"}],
+	[{"c100","host3"}],
+	stopped},
        {{"divi_1","1.0.0"},
 	"divi_1","1.0.0",
 	[{"mydivi","1.0.0"}],
@@ -77,16 +92,16 @@ deployment_info_all()->
 	 {"mydivi_c202","1.0.0"},
 	 {"mydivi_c203","1.0.0"}],
 	[],stopped},
-       {{"infra_1","1.0.0"},
-	"infra_1","1.0.0",
-	[{"infra","1.0.0"}],
-	[{"c100","host1"}],
-	stopped},
-       {{"math_1","1.0.0"}, 
+       {{"math_1","1.0.0"},
 	"math_1","1.0.0",
-	[{"single_mymath","1.0.0"}, 
+	[{"single_mymath","1.0.0"},
 	 {"mydivi","1.0.0"},
 	 {"myadd","1.0.0"}],
 	[{"c100","host1"}],
+	stopped},
+       {{"worker1","1.0.0"},
+	"worker1","1.0.0",
+	[{"worker","1.0.0"}],
+	[{"c100","host4"}],
 	stopped}],
     lists:keysort(1,A).

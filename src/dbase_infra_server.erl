@@ -14,7 +14,7 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
-% -include("").
+-include("logger_infra.hrl").
 %% --------------------------------------------------------------------
 
 -define(ScheduleInterval,1*10*1000).
@@ -64,12 +64,7 @@ init([]) ->
 	DbaseNodes->
 	    ok=dbase:dynamic_db_init(DbaseNodes)
     end,
-    
-	    
-	    
-   % DbaseNodes=lists:delete(node(),sd:get(dbase_infra)),
-   % io:format("DbaseNodes ~p~n",[{DbaseNodes,node(),?MODULE,?FUNCTION_NAME,?LINE}]),
-  %  dbase:dynamic_db_init(DbaseNodes),
+    log:log(?logger_info(info,"server started",[])),
     {ok, #state{}}.
 
 %% --------------------------------------------------------------------
@@ -90,6 +85,7 @@ handle_call({load_from_file,Module,Dir,yes},_From, State) ->
 	      []->
 		  ok;
 	      ErrorList->
+		  log:log(?logger_info(ticket,"Create failed ",[ErrorList])),
 		  ErrorList
 	  end,
     {reply, Reply, State};
@@ -132,14 +128,6 @@ handle_call(Request, From, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
-handle_cast({deallocate,Node,App}, State) ->
-    loader:deallocate(Node,App),
-    {noreply, State};
-
-handle_cast({schedule}, State) ->
-     spawn(fun()->do_schedule() end),
-    {noreply, State};
-
 handle_cast(Msg, State) ->
     io:format("unmatched match cast ~p~n",[{Msg,?MODULE,?LINE}]),
     {noreply, State}.
@@ -174,11 +162,3 @@ code_change(_OldVsn, State, _Extra) ->
 %% --------------------------------------------------------------------
 %%% Internal functions
 %% --------------------------------------------------------------------
-do_schedule()->
-    io:format("do_schedule start~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,time()}]),
-    timer:sleep(?ScheduleInterval),
- %   Result=rpc:call(node(),scheduler,start,[],10*1000),
- %   not_implmented=Result,
- %   io:format("~p~n",[{Result,?MODULE,?FUNCTION_NAME,?LINE,time()}]),
-    rpc:cast(node(),controller_server,schedule,[]).
-		  

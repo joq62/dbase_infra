@@ -15,17 +15,15 @@
 %%
 
 %% --------------------------------------------------------------------
--compile(export_all).
+%-compile(export_all).
 
-
+-export([
+	 dynamic_db_init/1,
+	 dynamic_load_table/1
+	 ]).
 %% ====================================================================
 %% External functions
 %% ====================================================================
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -33,7 +31,6 @@
 %% Returns: non
 %% --------------------------------------------------------------------
 dynamic_db_init([])->
-    io:format("DbaseNode, dynamic_db_init([]) node() ~p~n",[{node(),?FUNCTION_NAME,?MODULE,?LINE}]),
     mnesia:stop(),
     mnesia:del_table_copy(schema,node()),
     mnesia:delete_schema([node()]),
@@ -51,13 +48,12 @@ dynamic_db_init([DbaseNode|T])->
     StorageType=ram_copies,
   %  case rpc:call(DbaseNode,mnesia,change_config,[extra_db_nodes, [node()]],5000) of
     case rpc:call(node(),mnesia,change_config,[extra_db_nodes,[DbaseNode]],5000) of
-	{ok,[AddedNode]}->
+	{ok,[_AddedNode]}->
 	    Tables=mnesia:system_info(tables),
-	    TableRes=[{mnesia:add_table_copy(Table, node(),StorageType),Table}||Table<-Tables,
-		     Table/=schema],
+	    [mnesia:add_table_copy(Table, node(),StorageType)||Table<-Tables,
+								       Table/=schema],
 	    mnesia:wait_for_tables(Tables,20*1000);
-	Reason ->
-	    io:format("Error~p~n",[{error,Reason,DbaseNode,node(),?FUNCTION_NAME,?MODULE,?LINE}]),
+	_Reason ->
 	    dynamic_db_init(T) 
     end.
 

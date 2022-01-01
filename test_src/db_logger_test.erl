@@ -9,7 +9,6 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include_lib("kernel/include/logger.hrl").
 -include("controller.hrl").
 %% --------------------------------------------------------------------
 
@@ -66,8 +65,3 @@ start()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-
-logger_all()->
-    
-    A=[],
-    lists:keysort(1,A).

@@ -1,6 +1,34 @@
 -module(db_deployment).
 -import(lists, [foreach/2]).
--compile(export_all).
+%-compile(export_all).
+-export([
+	 add_pod/2,
+	 delete_pod/2,
+	 all_id/0,
+	 name/0,
+	 name/1,
+	 vsn/0, 
+	 vsn/1, 
+	 pod_specs/1,
+	 affinity/1,
+	 status/1	 
+	]).
+
+
+-export([
+	 data_from_file/1,
+	 create_table/0,
+	 delete_table_copy/1,
+	 create/1,
+	 add_table/1,
+	 add_table/2,
+	 add_node/3,
+	 read_all_record/0,
+	 read_all/0,
+	 read_record/1,
+	 read/1,
+	 delete/1	 
+	]).
 
 -include_lib("stdlib/include/qlc.hrl").
 

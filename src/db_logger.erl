@@ -1,7 +1,29 @@
 
 -module(db_logger).
 -import(lists, [foreach/2]).
--compile(export_all).
+%-compile(export_all).
+-export([
+	 update_status/2,
+	 ids/0,
+	 nice_print/1
+	 
+	]).
+
+
+-export([
+%	 data_from_file/1,
+	 create_table/0,
+	 delete_table_copy/1,
+	 create/1,
+	 add_table/1,
+	 add_table/2,
+	 add_node/3,
+	 read_all_record/0,
+	 read_all/0,
+	 read_record/1,
+	 read/1,
+	 delete/1	 
+	]).
 
 -include_lib("stdlib/include/qlc.hrl").
 

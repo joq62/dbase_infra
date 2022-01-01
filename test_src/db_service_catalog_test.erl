@@ -32,9 +32,9 @@ start()->
     AllInfo=cata_info_all(),
     AllInfo=lists:keysort(1,db_service_catalog:read_all()),
     
-    host=db_service_catalog:app({host,"0.1.0"}),
-    "0.1.0"=db_service_catalog:vsn({host,"0.1.0"}),
-    "https://github.com/joq62/host.git"=db_service_catalog:git_path({host,"0.1.0"}),
+    host=db_service_catalog:app({host,"1.0.0"}),
+    "1.0.0"=db_service_catalog:vsn({host,"1.0.0"}),
+    "https://github.com/joq62/host.git"=db_service_catalog:git_path({host,"1.0.0"}),
    
  
     
@@ -54,13 +54,14 @@ start()->
 
 cata_info_all()->
     
-    A=[{bully,"0.1.0","https://github.com/joq62/bully.git"},
+    A=[{boot,"1.0.0","https://github.com/joq62/boot.git"},
+       {bully,"0.1.0","https://github.com/joq62/bully.git"},
        {conbee,"1.0.0","https://github.com/joq62/conbee.git"},
-       {controller,"0.1.0",
+       {controller,"1.0.0",
 	"https://github.com/joq62/controller.git"},
-       {dbase_infra,"0.1.0",
+       {dbase_infra,"1.0.0",
 	"https://github.com/joq62/dbase_infra.git"},
-       {host,"0.1.0","https://github.com/joq62/host.git"},
+       {host,"1.0.0","https://github.com/joq62/host.git"},
        {kublet,"0.1.0","https://github.com/joq62/kublet.git"},
        {logger_infra,"1.0.0",
 	"https://github.com/joq62/logger_infra.git"},

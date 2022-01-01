@@ -17,7 +17,6 @@
 %% External exports
 -export([
 	 load_from_file/3,
-
 	 load_configs/0,
 	 delete_configs/0,
 	 load_configs/1,
@@ -65,8 +64,8 @@ load_configs()->
     ok.
 
 delete_configs()->
-    {TestDir,TestPath}=?TestConfig,
-    {Dir,Path}=?Config,
+    {TestDir,_}=?TestConfig,
+    {Dir,_}=?Config,
     os:cmd("rm -rf "++TestDir),
     os:cmd("rm -rf "++Dir),
     ok.
@@ -130,42 +129,39 @@ initiate_dbase(Root)->
     RunningNodes=lists:delete(node(),sd:get(dbase_infra)),
     NodesMnesiaStarted=[Node||Node<-RunningNodes,
 			      yes=:=rpc:call(Node,mnesia,system_info,[is_running],1000)],
-    io:format("NodesMnesiaStarted ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,node(),NodesMnesiaStarted}]),
+  %  io:format("NodesMnesiaStarted ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,node(),NodesMnesiaStarted}]),
     DbaseSpecs=dbase_infra:get_dbase_specs(),
-    io:format("DbaseSpecs ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,node(),DbaseSpecs}]),
-    case NodesMnesiaStarted of
-	[]-> % initial start
-	    DbaseSpecs_2=[{Module,filename:join(Root,Dir),Directive}||{Module,Dir,Directive}<-DbaseSpecs],
-	    LoadResult=[{Module,dbase_infra:load_from_file(Module,Dir,Directive)}||{Module,Dir,Directive}<-DbaseSpecs_2],
-	    io:format("LoadResult ~p~n",[{LoadResult,?MODULE,?FUNCTION_NAME,?LINE,node()}]),
-	    case [{Module,R}||{Module,R}<-LoadResult,R/=ok] of
-		[]->
-		    ok;
-		ReasonList->
-		    {error,ReasonList}
-	    end;
-	[Node0|_]->
-	    io:format("Node0 ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,Node0}]),
-	    ok=rpc:call(node(),dbase_infra,add_dynamic,[Node0],3*1000),
-	    timer:sleep(500),
-	    _R=[rpc:call(node(),dbase_infra,dynamic_load_table,[node(),Module],3*1000)||{Module,_}<-DbaseSpecs],
-	    
-	    timer:sleep(500),
-	    ok
-    end,
-    ok.
-
-
-init_dbase_service(Node,{Module,Source,Directive})->
-    LoadResult=[R||R<-rpc:call(Node,dbase_infra,load_from_file,[Module,Source,Directive],2*1000),
-			   R/=ok],
-    Result=case LoadResult of
-	       []-> %ok
-		   {ok,[Node,Module]};
-	       Reason ->
-		   {error,[Node,Module,Reason]}
+  %  io:format("DbaseSpecs ~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,node(),DbaseSpecs}]),
+    Result=case NodesMnesiaStarted of
+	       []-> % initial start
+		   DbaseSpecs_2=[{Module,filename:join(Root,Dir),Directive}||{Module,Dir,Directive}<-DbaseSpecs],
+		   LoadResult=[{Module,dbase_infra:load_from_file(Module,Dir,Directive)}||{Module,Dir,Directive}<-DbaseSpecs_2],
+		   case [{Module,R}||{Module,R}<-LoadResult,R/=ok] of
+		       []->
+			   ok;
+		       ReasonList->
+			   {error,ReasonList}
+		   end;
+	       [Node0|_]->
+		   ok=rpc:call(node(),dbase_infra,add_dynamic,[Node0],3*1000),
+		   timer:sleep(500),
+		   _R=[rpc:call(node(),dbase_infra,dynamic_load_table,[node(),Module],3*1000)||{Module,_}<-DbaseSpecs],
+		   timer:sleep(500),
+		   ok
 	   end,
     Result.
+
+
+%init_dbase_service(Node,{Module,Source,Directive})->
+%    LoadResult=[R||R<-rpc:call(Node,dbase_infra,load_from_file,[Module,Source,Directive],2*1000),
+%			   R/=ok],
+%    Result=case LoadResult of
+%	       []-> %ok
+%		   {ok,[Node,Module]};
+%	       Reason ->
+%		   {error,[Node,Module,Reason]}
+%	   end,
+ %   Result.
 %% --------------------------------------------------------------------
 %% Function:start
 %% Description: List of test cases 

@@ -9,7 +9,7 @@ all:
 	erlc -I ../../include -I include -o ebin ../../common/src/*.erl;
 #	app
 	cp src/*.app ebin;
-	erlc -I include -I ../controller/include -o ebin src/*.erl;
+	erlc -I ../../include -I include -I ../controller/include -o ebin src/*.erl;
 	echo Done
 unit_test:
 	rm -rf ebin/* src/*.beam *.beam test_src/*.beam test_ebin;
