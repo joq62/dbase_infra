@@ -79,7 +79,8 @@ nice_print(Id)->
 	    %io:format("~0p~n",[{DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1}])
 	  %  io:format("~0p~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
 	  %  io:format("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,Args,Status1])
-	    io:fwrite("~0p~n",[[DateTime,NodeSeverity,Msg,MFL,{Args},Status1]])
+	    io:fwrite("~0p~n",[[DateTime,NodeSeverity,Msg,MFL,{Args},Status1]]),
+	    io:format("~n")
 	  %  io:fwrite("~s ~s ~s ~s ~s ~s ~w ~s~n",[DateTime,NodeSeverity,'"',Msg,'"',MFL,{Args},Status1])
     end.
 
